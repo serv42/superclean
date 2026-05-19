@@ -161,16 +161,29 @@ function renderProtokollTab(container) {
     
     const savedState = Storage.get(`room_${key}_state`, { checked: [] });
     const completedCount = savedState.checked.length;
+    const totalTasks = room.tasks.length;
+    const percentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+    
+    // Dynamic badge
+    let badgeHTML = '';
+    if (percentage === 0) {
+      badgeHTML = `<div class="mt-2 inline-block px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded-full">offene Aufgaben!</div>`;
+    } else if (percentage < 100) {
+      badgeHTML = `<div class="mt-2 inline-block px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">teils offene Aufgaben</div>`;
+    } else {
+      badgeHTML = `<div class="mt-2 inline-block px-2.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">Bereich sauber ✓</div>`;
+    }
     
     card.innerHTML = `
       <div class="flex justify-between items-start mb-5">
         <div class="text-5xl">${getRoomIcon(key)}</div>
         <div class="text-right">
-          <div class="text-xs text-slate-500">${completedCount}/${room.tasks.length}</div>
+          <div class="text-xs text-slate-500">${completedCount}/${totalTasks}</div>
         </div>
       </div>
       <div class="font-semibold text-xl text-slate-900 mb-1">${room.name}</div>
-      <div class="text-sm text-slate-600">${completedCount} von ${room.tasks.length} erledigt</div>
+      <div class="text-sm text-slate-600 mb-1">${completedCount} von ${totalTasks} erledigt</div>
+      ${badgeHTML}
     `;
     card.onclick = () => showRoomPage(key, card);
     grid.appendChild(card);
