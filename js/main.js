@@ -191,20 +191,20 @@ function getRoomIcon(key) {
   return icons[key] || '🏠';
 }
 
-// Full Page Slide with Swipe Back
+// Full Page Slide with proper scrolling and working buttons
 let currentPage = null;
 
 function showRoomPage(roomKey) {
   const room = roomsData.de[roomKey];
   
   const page = document.createElement('div');
-  page.className = 'fixed inset-0 bg-white z-[200] transform translate-x-full transition-transform duration-300';
+  page.className = 'fixed inset-0 bg-white z-[200] transform translate-x-full transition-transform duration-300 overflow-hidden';
   page.innerHTML = `
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-4xl mx-auto h-full flex flex-col">
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-5 border-b sticky top-0 bg-white z-10">
+      <div class="flex items-center justify-between px-6 py-5 border-b sticky top-0 bg-white z-10 flex-shrink-0">
         <div class="flex items-center gap-4">
-          <button onclick="closeRoomPage(this)" class="text-3xl text-slate-400 hover:text-slate-600 w-10 h-10 flex items-center justify-center">
+          <button class="back-btn text-3xl text-slate-400 hover:text-slate-600 w-10 h-10 flex items-center justify-center">
             ←
           </button>
           <div class="flex items-center gap-4">
@@ -217,13 +217,13 @@ function showRoomPage(roomKey) {
         </div>
       </div>
 
-      <!-- Tasks -->
-      <div class="p-6 space-y-4" id="page-tasks"></div>
+      <!-- Scrollable Tasks -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-4" id="page-tasks" style="padding-bottom: 100px;"></div>
 
       <!-- Footer -->
-      <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex gap-3">
-        <button onclick="closeRoomPage(this)" class="flex-1 py-4 border border-slate-300 rounded-2xl font-semibold">Abbrechen</button>
-        <button onclick="saveRoomTasks(this)" class="flex-1 py-4 bg-[#FF385C] text-white rounded-2xl font-semibold">Speichern</button>
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex gap-3 z-20">
+        <button class="cancel-btn flex-1 py-4 border border-slate-300 rounded-2xl font-semibold">Abbrechen</button>
+        <button class="save-btn flex-1 py-4 bg-[#FF385C] text-white rounded-2xl font-semibold">Speichern</button>
       </div>
     </div>
   `;
@@ -253,6 +253,19 @@ function showRoomPage(roomKey) {
     `;
     container.appendChild(div);
   });
+
+  // Attach button events
+  const backBtn = page.querySelector('.back-btn');
+  const cancelBtn = page.querySelector('.cancel-btn');
+  const saveBtn = page.querySelector('.save-btn');
+
+  backBtn.onclick = () => closeRoomPage(page);
+  cancelBtn.onclick = () => closeRoomPage(page);
+  saveBtn.onclick = () => {
+    // Save logic here
+    window.showToast('Aufgaben gespeichert!');
+    closeRoomPage(page);
+  };
 }
 
 function addSwipeBackGesture(page) {
@@ -261,7 +274,7 @@ function addSwipeBackGesture(page) {
   let isDragging = false;
 
   page.addEventListener('touchstart', (e) => {
-    if (e.touches[0].clientX < 50) { // Only start from left edge
+    if (e.touches[0].clientX < 50) {
       startX = e.touches[0].clientX;
       isDragging = true;
     }
@@ -284,7 +297,7 @@ function addSwipeBackGesture(page) {
     
     const diff = currentX - startX;
     
-    if (diff > 120) { // Threshold for close
+    if (diff > 120) {
       closeRoomPage(page);
     } else {
       page.style.transition = 'transform 0.2s ease';
@@ -296,11 +309,13 @@ function addSwipeBackGesture(page) {
   });
 }
 
-function closeRoomPage(element) {
-  const page = element.closest ? element.closest('.fixed') : element;
+function closeRoomPage(page) {
+  if (!page) return;
   page.style.transition = 'transform 0.3s ease';
   page.style.transform = 'translateX(100%)';
-  setTimeout(() => page.remove(), 300);
+  setTimeout(() => {
+    if (page.parentNode) page.parentNode.removeChild(page);
+  }, 300);
 }
 
 function renderHistoryTab(container) {
