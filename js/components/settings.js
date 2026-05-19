@@ -1,40 +1,35 @@
 import { Storage } from '../utils/storage.js';
 
-export function renderSettings(container) {
+export function renderAdminSettings(container) {
     container.innerHTML = `
         <div class="max-w-2xl mx-auto">
             <h1 class="text-4xl font-bold mb-2">Einstellungen</h1>
             <p class="text-slate-600 dark:text-slate-400 mb-8">Admin-Bereich • PIN: 12351235</p>
 
             <div class="bg-white dark:bg-slate-800 rounded-3xl border p-8">
-                <!-- PIN -->
                 <div class="mb-8">
                     <label class="font-semibold block mb-2">Admin-PIN</label>
                     <div class="flex gap-3">
                         <input id="admin-pin" type="password" placeholder="PIN eingeben" class="flex-1 px-4 py-3 border rounded-2xl">
-                        <button onclick="unlockAdmin()" class="px-8 py-3 bg-emerald-600 text-white rounded-2xl font-medium">Entsperren</button>
+                        <button onclick="unlockAdmin()" class="px-8 py-3 bg-[#FF385C] text-white rounded-2xl font-medium">Entsperren</button>
                     </div>
                 </div>
 
                 <div id="admin-content" class="hidden space-y-8">
-                    <!-- Company -->
                     <div>
                         <label class="font-semibold">Firmenname</label>
                         <input id="company-name" class="w-full px-4 py-3 border rounded-2xl mt-2" value="SuperClean Pro">
                     </div>
 
-                    <!-- Email Sender URL -->
                     <div>
                         <label class="font-semibold">PHP Sender URL</label>
                         <input id="php-sender-url" placeholder="https://deine-domain.de/php-helper/sender.php" class="w-full px-4 py-3 border rounded-2xl mt-2">
                         <p class="text-xs text-slate-500 mt-1">URL zu deiner sender.php</p>
                     </div>
 
-                    <!-- SMTP Settings -->
                     <div class="border-t pt-6">
                         <h3 class="font-semibold mb-4 flex items-center gap-x-2">
-                            <i class="fa-solid fa-server"></i> 
-                            <span>SMTP Einstellungen (empfohlen)</span>
+                            <i class="fa-solid fa-server"></i> <span>SMTP Einstellungen (empfohlen)</span>
                         </h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -47,7 +42,7 @@ export function renderSettings(container) {
                                 <input id="smtp-port" placeholder="587" class="w-full px-4 py-2.5 border rounded-2xl mt-1 text-sm">
                             </div>
                             <div>
-                                <label class="text-sm">Benutzername (E-Mail)</label>
+                                <label class="text-sm">Benutzername</label>
                                 <input id="smtp-user" placeholder="deine@email.de" class="w-full px-4 py-2.5 border rounded-2xl mt-1 text-sm">
                             </div>
                             <div>
@@ -64,13 +59,12 @@ export function renderSettings(container) {
                         </div>
                     </div>
 
-                    <button onclick="saveSettings()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-semibold mt-6">Einstellungen speichern</button>
+                    <button onclick="saveSettings()" class="w-full py-3.5 bg-[#FF385C] hover:bg-[#E31C5F] text-white rounded-3xl font-semibold mt-6">Einstellungen speichern</button>
                 </div>
             </div>
         </div>
     `;
 
-    // Load saved values
     const saved = {
         url: Storage.get('superclean_php_url', ''),
         host: Storage.get('superclean_smtp_host', ''),
@@ -101,7 +95,6 @@ export function renderSettings(container) {
         Storage.set('superclean_smtp_user', document.getElementById('smtp-user').value.trim());
         Storage.set('superclean_smtp_pass', document.getElementById('smtp-pass').value.trim());
         Storage.set('superclean_smtp_enc', document.getElementById('smtp-encryption').value);
-
-        alert('Einstellungen erfolgreich gespeichert!');
+        alert('Einstellungen gespeichert!');
     };
 }

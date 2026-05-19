@@ -2,7 +2,7 @@ import { Storage } from './utils/storage.js';
 import { createRoomSection, getRoomData } from './components/room-checklist.js';
 import { initSignaturePad, clearSignature, saveSignature, getSignature } from './components/signature.js';
 import { renderHistory, showProtocolModal } from './components/history.js';
-import { renderSettings } from './components/settings.js';
+import { renderAdminSettings } from './components/settings.js';
 import { roomsData } from './data/rooms.js';
 
 window.showTab = function(tab) {
@@ -15,7 +15,7 @@ window.showTab = function(tab) {
 
     if (tab === 'protokoll') renderProtokoll(content);
     else if (tab === 'historie') renderHistoryTab(content);
-    else if (tab === 'settings') renderSettings(content);
+    else if (tab === 'settings') renderSettingsTab(content);
 };
 
 function renderProtokoll(container) {
@@ -37,13 +37,13 @@ function renderProtokoll(container) {
             <canvas id="signature-canvas" width="600" height="180" class="signature-canvas w-full max-w-[600px]"></canvas>
             <div class="flex gap-3 mt-4">
                 <button onclick="clearSignature()" class="px-6 py-2 border rounded-2xl">Löschen</button>
-                <button onclick="saveSignature()" class="px-6 py-2 bg-emerald-600 text-white rounded-2xl">Speichern</button>
+                <button onclick="saveSignature()" class="px-6 py-2 bg-[#FF385C] text-white rounded-2xl">Speichern</button>
             </div>
         </div>
 
         <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <button onclick="saveProtocol()" class="bg-emerald-600 text-white py-4 rounded-3xl font-semibold">Protokoll speichern</button>
-            <button onclick="generatePDF()" class="border border-emerald-600 text-emerald-600 py-4 rounded-3xl font-semibold">PDF</button>
+            <button onclick="saveProtocol()" class="bg-[#FF385C] hover:bg-[#E31C5F] text-white py-4 rounded-3xl font-semibold">Protokoll speichern</button>
+            <button onclick="generatePDF()" class="border border-[#FF385C] text-[#FF385C] py-4 rounded-3xl font-semibold">PDF</button>
             <button onclick="sendLiveEmail()" class="border border-slate-300 py-4 rounded-3xl font-semibold">Per E-Mail senden (SMTP)</button>
         </div>
     `;
@@ -67,7 +67,9 @@ function renderProtokoll(container) {
 
 function renderHistoryTab(c) { renderHistory(c, showProtocolModal, deleteProtocol); }
 
-function renderSettings(c) { renderSettings(c); }
+function renderSettingsTab(container) {
+    renderAdminSettings(container);
+}
 
 function deleteProtocol(id, el) {
     if (!confirm('Wirklich löschen?')) return;
@@ -105,10 +107,7 @@ window.generatePDF = function() {
 
 window.sendLiveEmail = async function() {
     const phpUrl = Storage.get('superclean_php_url', '');
-    if (!phpUrl) {
-        alert('Bitte PHP Sender URL in den Einstellungen eintragen!');
-        return;
-    }
+    if (!phpUrl) { alert('Bitte PHP Sender URL in den Einstellungen eintragen!'); return; }
 
     const payload = {
         to: prompt('Empfänger E-Mail:'),
@@ -125,20 +124,15 @@ window.sendLiveEmail = async function() {
     if (!payload.to) return;
 
     try {
-        const res = await fetch(phpUrl, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
+        const res = await fetch(phpUrl, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
         const result = await res.json();
-        alert(result.success ? 'E-Mail erfolgreich versendet!' : 'Fehler: ' + (result.error || result.warning));
+        alert(result.success ? '✅ E-Mail erfolgreich versendet!' : 'Fehler: ' + (result.error || result.warning));
     } catch(e) {
         alert('Verbindung fehlgeschlagen. Bitte URL und SMTP-Daten prüfen.');
     }
 };
 
-// Navbar + Start
-(function() {
+(function init() {
     document.getElementById('nav-tabs').innerHTML = `
         <div onclick="window.showTab('protokoll')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer active" id="tab-protokoll"><i class="fa-solid fa-clipboard-list"></i> <span>Neues Protokoll</span></div>
         <div onclick="window.showTab('historie')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer" id="tab-historie"><i class="fa-solid fa-history"></i> <span>Historie</span></div>
