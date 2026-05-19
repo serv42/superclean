@@ -82,7 +82,7 @@ function renderProtokollTab(container) {
           <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
             <i class="fa-solid fa-box text-amber-500 text-2xl"></i>
           </div>
-          <h2 class="text-3xl font-semibold text-slate-900">Vorräte &amp; Mängel</h2>
+          <h2 class="text-3xl font-semibold text-slate-900">Vorräte & Mängel</h2>
         </div>
 
         <div class="mb-8">
@@ -476,6 +476,13 @@ function showProtocolModal(index) {
         }).join('')}
       </div>
       
+      ${p.signature ? `
+        <div class="mt-8">
+          <p class="text-sm font-medium text-slate-700 mb-2">Unterschrift der Reinigungskraft</p>
+          <img src="${p.signature}" class="max-w-[280px] border border-slate-200 rounded-2xl shadow-sm" alt="Unterschrift">
+        </div>
+      ` : ''}
+      
       <div class="mt-8 flex gap-3">
         <button onclick="downloadProtocolPDF(${index}); this.closest('.fixed').remove()" class="flex-1 py-4 border border-[#FF385C] text-[#FF385C] rounded-2xl font-semibold">
           PDF herunterladen
@@ -541,6 +548,25 @@ function downloadProtocolPDF(index) {
     }
   });
   
+  // SIGNATURE IM PDF
+  if (p.signature) {
+    try {
+      if (y > 200) {
+        doc.addPage();
+        y = 30;
+      }
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Unterschrift der Reinigungskraft:', 20, y);
+      y += 10;
+      
+      // Bild einfügen (Base64 PNG)
+      doc.addImage(p.signature, 'PNG', 20, y, 80, 28);
+    } catch (e) {
+      console.warn('Signature konnte nicht ins PDF eingefügt werden:', e);
+    }
+  }
+  
   doc.save(`Protokoll_${p.property.replace(/\s+/g, '_')}.pdf`);
 }
 
@@ -571,7 +597,8 @@ function saveProtocol() {
     date: document.getElementById('date').value,
     rooms: {},
     completedTasks: 0,
-    language: 'de'
+    language: 'de',
+    signature: getSignature()   // <-- NEU: Unterschrift wird jetzt gespeichert!
   };
   
   let totalCompleted = 0;
