@@ -386,39 +386,34 @@ function renderHistoryTab(container) {
         </div>
         ${protocols.length > 0 ? `<button onclick="clearAllHistory()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium">Alle löschen</button>` : ''}
       </div>
+      
+      ${protocols.length === 0 ? `
+        <div class="text-center py-16">
+          <i class="fa-solid fa-history text-6xl text-slate-300 mb-6"></i>
+          <h3 class="text-2xl font-semibold text-slate-700 mb-2">Noch keine Protokolle</h3>
+          <p class="text-slate-500">Erstelle dein erstes Protokoll im "Protokoll" Tab</p>
+        </div>
+      ` : protocols.map((p, index) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" onclick="showProtocolModal(${index})">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-2xl font-semibold text-slate-900">${p.property}</h3>
+              <p class="text-sm text-slate-600">${p.date} • ${p.cleaner}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-slate-500">${Object.keys(p.rooms || {}).length} Räume</div>
+              <div class="text-xs text-emerald-600 font-medium">${p.completedTasks || 0} Aufgaben erledigt</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <i class="fa-solid fa-clock"></i>
+            <span>${new Date(p.id).toLocaleDateString('de-DE')}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
   `;
-  
-  if (protocols.length === 0) {
-    html += `
-      <div class="text-center py-16">
-        <i class="fa-solid fa-history text-6xl text-slate-300 mb-6"></i>
-        <h3 class="text-2xl font-semibold text-slate-700 mb-2">Noch keine Protokolle</h3>
-        <p class="text-slate-500">Erstelle dein erstes Protokoll im "Protokoll" Tab</p>
-      </div>
-    `;
-  } else {
-    html += protocols.map((p, index) => `
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" onclick="showProtocolModal(${index})">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="text-2xl font-semibold text-slate-900">${p.property}</h3>
-            <p class="text-sm text-slate-600">${p.date} • ${p.cleaner}</p>
-          </div>
-          <div class="text-right">
-            <div class="text-sm text-slate-500">${Object.keys(p.rooms || {}).length} Räume</div>
-            <div class="text-xs text-emerald-600 font-medium">${p.completedTasks || 0} Aufgaben erledigt</div>
-          </div>
-        </div>
-        
-        <div class="flex items-center gap-2 text-sm text-slate-500">
-          <i class="fa-solid fa-clock"></i>
-          <span>${new Date(p.id).toLocaleDateString('de-DE')}</span>
-        </div>
-      </div>
-    `).join('');
-  }
-  
-  html += `</div>`;
   container.innerHTML = html;
 }
 
@@ -483,6 +478,9 @@ function showProtocolModal(index) {
   `;
   document.body.appendChild(modal);
 }
+
+// Expose to global scope for onclick handlers
+window.showProtocolModal = showProtocolModal;
 
 function downloadProtocolPDF(index) {
   const protocols = Storage.get('superclean_protocols', []);
