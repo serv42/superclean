@@ -139,7 +139,7 @@ function renderProtokollTab(container) {
           <label for="confirm" class="text-base text-slate-700">Ich bestätige, dass die Reinigung ordnungsgemäß abgeschlossen wurde.</label>
         </div>
 
-        <button onclick="saveProtocol()" class="w-full py-4 bg-[#FF385C] hover:bg-[#E31C5F] text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-3 shadow-lg shadow-[#FF385C]/30 transition-all active:scale-[0.985]">
+        <button id="save-protocol-btn" class="w-full py-4 bg-[#FF385C] hover:bg-[#E31C5F] text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-3 shadow-lg shadow-[#FF385C]/30 transition-all active:scale-[0.985]">
           <i class="fa-solid fa-paper-plane"></i>
           <span>Protokoll absenden</span>
         </button>
@@ -184,6 +184,12 @@ function renderProtokollTab(container) {
     div.innerHTML = `<input type="checkbox" class="accent-[#FF385C]"> <span>${item}</span>`;
     suppliesContainer.appendChild(div);
   });
+
+  // Attach save protocol button
+  const saveBtn = document.getElementById('save-protocol-btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveProtocol);
+  }
 
   setTimeout(() => {
     initSignaturePad();
