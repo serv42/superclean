@@ -35,7 +35,7 @@ window.showTab = function(tab) {
 
 function renderProtokollTab(container) {
   container.innerHTML = `
-    <div class="max-w-4xl mx-auto pb-24">
+    <div class="max-w-4xl mx-auto pb-24 bg-white">
       <div class="flex items-center gap-5 mb-12">
         <div class="w-16 h-16 bg-[#FF385C] rounded-3xl flex items-center justify-center shadow-xl shadow-[#FF385C]/30">
           <i class="fa-solid fa-broom text-white text-4xl"></i>
