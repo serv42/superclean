@@ -41,8 +41,8 @@ function renderProtokollTab(container) {
           <i class="fa-solid fa-broom text-white text-3xl"></i>
         </div>
         <div>
-          <h1 class="text-5xl font-semibold tracking-tight">Neues Reinigungsprotokoll</h1>
-          <p class="text-xl text-slate-600 mt-1">Bitte füllen Sie alle Felder sorgfältig aus.</p>
+          <h1 class="text-5xl font-semibold tracking-tight text-slate-900">Neues Reinigungsprotokoll</h1>
+          <p class="text-xl text-slate-700 mt-1">Bitte füllen Sie alle Felder sorgfältig aus.</p>
         </div>
       </div>
 
@@ -67,8 +67,8 @@ function renderProtokollTab(container) {
             <i class="fa-solid fa-clipboard-list text-[#FF385C] text-2xl"></i>
           </div>
           <div>
-            <h2 class="text-3xl font-semibold">Checkliste</h2>
-            <p class="text-sm text-slate-500 mt-1">Tippe auf einen Bereich, um die Aufgaben zu sehen.</p>
+            <h2 class="text-3xl font-semibold text-slate-900">Checkliste</h2>
+            <p class="text-sm text-slate-600 mt-1">Tippe auf einen Bereich, um die Aufgaben zu sehen.</p>
           </div>
         </div>
         <div id="rooms-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
@@ -79,7 +79,7 @@ function renderProtokollTab(container) {
           <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
             <i class="fa-solid fa-box text-amber-500 text-2xl"></i>
           </div>
-          <h2 class="text-3xl font-semibold">Vorräte &amp; Mängel</h2>
+          <h2 class="text-3xl font-semibold text-slate-900">Vorräte &amp; Mängel</h2>
         </div>
 
         <div class="mb-8">
@@ -98,12 +98,12 @@ function renderProtokollTab(container) {
           <div class="w-10 h-10 bg-[#FF385C] bg-opacity-10 rounded-xl flex items-center justify-center">
             <i class="fa-solid fa-camera text-[#FF385C] text-2xl"></i>
           </div>
-          <h2 class="text-3xl font-semibold">Foto-Dokumentation</h2>
+          <h2 class="text-3xl font-semibold text-slate-900">Foto-Dokumentation</h2>
         </div>
         <div onclick="document.getElementById('photos').click()" class="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center cursor-pointer hover:border-[#FF385C] transition-all">
           <i class="fa-solid fa-cloud-upload-alt text-4xl text-slate-400 mb-3"></i>
-          <p class="font-medium">Foto auswählen oder aufnehmen</p>
-          <p class="text-xs text-slate-500 mt-1">PNG, JPG bis 10MB</p>
+          <p class="font-medium text-slate-900">Foto auswählen oder aufnehmen</p>
+          <p class="text-xs text-slate-600 mt-1">PNG, JPG bis 10MB</p>
         </div>
         <input type="file" id="photos" multiple accept="image/*" class="hidden">
         <div id="photo-preview" class="flex flex-wrap gap-3 mt-4"></div>
@@ -140,8 +140,8 @@ function renderProtokollTab(container) {
         <div class="text-5xl">${getRoomIcon(key)}</div>
         <div class="text-right"><div class="text-xs text-slate-500">0/${room.tasks.length}</div></div>
       </div>
-      <div class="font-semibold text-xl mb-1">${room.name}</div>
-      <div class="text-sm text-slate-500">0 von ${room.tasks.length} erledigt</div>
+      <div class="font-semibold text-xl text-slate-900 mb-1">${room.name}</div>
+      <div class="text-sm text-slate-600">0 von ${room.tasks.length} erledigt</div>
     `;
     card.onclick = () => openRoomModal(key);
     grid.appendChild(card);
@@ -173,8 +173,8 @@ function openRoomModal(roomKey) {
         <div class="flex items-center gap-4">
           <div class="text-6xl">${getRoomIcon(roomKey)}</div>
           <div>
-            <h3 class="text-2xl font-semibold">${room.name}</h3>
-            <p class="text-sm text-slate-500">${room.tasks.length} Aufgaben</p>
+            <h3 class="text-2xl font-semibold text-slate-900">${room.name}</h3>
+            <p class="text-sm text-slate-600">${room.tasks.length} Aufgaben</p>
           </div>
         </div>
         <button onclick="this.closest('.fixed').remove()" class="text-3xl text-slate-400 hover:text-slate-600">&times;</button>
