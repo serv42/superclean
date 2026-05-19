@@ -71,7 +71,7 @@ superclean/
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Vanilla JavaScript + Tailwind CSS (CDN)
+- **Frontend**: Vanilla JavaScript + Tailwind CSS (Lokal)
 - **Design**: Shadcn/UI Style (Cards, Shadows, Rounded-2xl)
 - **Storage**: localStorage (vollständig offline-fähig)
 - **PDF**: jsPDF
@@ -97,7 +97,7 @@ https://serv42.github.io/superclean/
 - **Design**: Chief Design Officer Level (Airbnb-Style)
 - **Mobile**: Vollständig optimiert + Touch-Gestures
 - **Daten**: 100% lokal gespeichert (DSGVO-konform)
-- **Performance**: Sehr gut (keine externen Abhängigkeiten außer CDNs)
+- **Performance**: Sehr gut (keine externen Abhängigkeiten außer FontAwesome & jsPDF CDNs, Tailwind lokal)
 
 ---
 
