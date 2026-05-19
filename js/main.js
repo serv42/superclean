@@ -191,7 +191,9 @@ function getRoomIcon(key) {
   return icons[key] || '🏠';
 }
 
-// Full Page Slide (replaces modal)
+// Full Page Slide with Swipe Back
+let currentPage = null;
+
 function showRoomPage(roomKey) {
   const room = roomsData.de[roomKey];
   
@@ -227,11 +229,15 @@ function showRoomPage(roomKey) {
   `;
   
   document.body.appendChild(page);
+  currentPage = page;
   
-  // Slide in animation
+  // Slide in
   setTimeout(() => {
     page.style.transform = 'translateX(0)';
   }, 10);
+
+  // Add swipe back gesture
+  addSwipeBackGesture(page);
 
   // Render tasks
   const container = page.querySelector('#page-tasks');
@@ -249,8 +255,50 @@ function showRoomPage(roomKey) {
   });
 }
 
+function addSwipeBackGesture(page) {
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+
+  page.addEventListener('touchstart', (e) => {
+    if (e.touches[0].clientX < 50) { // Only start from left edge
+      startX = e.touches[0].clientX;
+      isDragging = true;
+    }
+  });
+
+  page.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    
+    if (diff > 0) {
+      page.style.transform = `translateX(${diff}px)`;
+      e.preventDefault();
+    }
+  });
+
+  page.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    const diff = currentX - startX;
+    
+    if (diff > 120) { // Threshold for close
+      closeRoomPage(page);
+    } else {
+      page.style.transition = 'transform 0.2s ease';
+      page.style.transform = 'translateX(0)';
+      setTimeout(() => {
+        page.style.transition = 'transform 0.3s ease';
+      }, 200);
+    }
+  });
+}
+
 function closeRoomPage(element) {
-  const page = element.closest('.fixed');
+  const page = element.closest ? element.closest('.fixed') : element;
+  page.style.transition = 'transform 0.3s ease';
   page.style.transform = 'translateX(100%)';
   setTimeout(() => page.remove(), 300);
 }
