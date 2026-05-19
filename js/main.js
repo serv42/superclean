@@ -158,16 +158,18 @@ function renderProtokollTab(container) {
   Object.keys(roomsData.de).forEach(key => {
     const room = roomsData.de[key];
     const card = document.createElement('div');
-    card.className = `bg-white border border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#FF385C] active:scale-[0.985] transition-all`;
+    card.className = `bg-white border border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#FF385C] active:scale-[0.985] transition-all room-card`;
     card.innerHTML = `
       <div class="flex justify-between items-start mb-5">
         <div class="text-5xl">${getRoomIcon(key)}</div>
-        <div class="text-right"><div class="text-xs text-slate-500">0/${room.tasks.length}</div></div>
+        <div class="text-right">
+          <div class="text-xs text-slate-500">0/${room.tasks.length}</div>
+        </div>
       </div>
       <div class="font-semibold text-xl text-slate-900 mb-1">${room.name}</div>
       <div class="text-sm text-slate-600">0 von ${room.tasks.length} erledigt</div>
     `;
-    card.onclick = () => showRoomPage(key);
+    card.onclick = () => showRoomPage(key, card);
     grid.appendChild(card);
   });
 
@@ -191,11 +193,15 @@ function getRoomIcon(key) {
   return icons[key] || '🏠';
 }
 
-// Full Page Slide - Fixed version
+// Full Page Slide with live counter
 let currentPage = null;
+let currentRoomKey = null;
+let currentCard = null;
 
-function showRoomPage(roomKey) {
+function showRoomPage(roomKey, cardElement) {
   const room = roomsData.de[roomKey];
+  currentRoomKey = roomKey;
+  currentCard = cardElement;
   
   const page = document.createElement('div');
   page.className = 'fixed inset-0 bg-white z-[200] transform translate-x-full transition-transform duration-300 overflow-hidden';
@@ -211,7 +217,7 @@ function showRoomPage(roomKey) {
             <div class="text-6xl">${getRoomIcon(roomKey)}</div>
             <div>
               <h2 class="text-3xl font-semibold text-slate-900">${room.name}</h2>
-              <p class="text-sm text-slate-600">${room.tasks.length} Aufgaben</p>
+              <p class="text-sm text-slate-600" id="task-counter">0/${room.tasks.length} erledigt</p>
             </div>
           </div>
         </div>
@@ -239,8 +245,12 @@ function showRoomPage(roomKey) {
   // Add swipe back gesture
   addSwipeBackGesture(page);
 
-  // Render tasks
+  // Render tasks with live counter
   const container = page.querySelector('#page-tasks');
+  const counter = page.querySelector('#task-counter');
+  
+  let completedCount = 0;
+  
   room.tasks.forEach((task, i) => {
     const div = document.createElement('div');
     div.className = 'flex items-start gap-4 p-4 border border-slate-100 rounded-2xl';
@@ -251,10 +261,29 @@ function showRoomPage(roomKey) {
         <input type="text" placeholder="Notiz (optional)" class="mt-2 w-full px-4 py-2 text-sm border border-slate-200 rounded-xl">
       </div>
     `;
+    
+    const checkbox = div.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        completedCount++;
+      } else {
+        completedCount--;
+      }
+      counter.textContent = `${completedCount}/${room.tasks.length} erledigt`;
+      
+      // Update card counter
+      if (currentCard) {
+        const counterEl = currentCard.querySelector('.text-xs');
+        if (counterEl) {
+          counterEl.textContent = `${completedCount}/${room.tasks.length}`;
+        }
+      }
+    });
+    
     container.appendChild(div);
   });
 
-  // Attach button events properly
+  // Attach button events
   const backBtn = page.querySelector('.back-btn');
   const cancelBtn = page.querySelector('.cancel-btn');
   const saveBtn = page.querySelector('.save-btn');
