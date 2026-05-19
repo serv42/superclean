@@ -208,9 +208,9 @@ function getRoomIcon(key) {
     bedroom: '🛏️', 
     bathroom: '🚰️', 
     hallway: '🚪', 
-    balcony: '🌞',   // Sonne für Balkon/Terrasse
+    balcony: '🌿',   // Grün für Terrasse/Balkon
     laundry: '🧺', 
-    cellar: '📦'    // Paket für Keller
+    cellar: '🗃️'   // Aktenordner für Keller
   };
   return icons[key] || '🏠';
 }
