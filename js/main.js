@@ -191,7 +191,7 @@ function getRoomIcon(key) {
   return icons[key] || '🏠';
 }
 
-// Full Page Slide with proper scrolling and working buttons
+// Full Page Slide - Fixed version
 let currentPage = null;
 
 function showRoomPage(roomKey) {
@@ -218,7 +218,7 @@ function showRoomPage(roomKey) {
       </div>
 
       <!-- Scrollable Tasks -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-4" id="page-tasks" style="padding-bottom: 100px;"></div>
+      <div class="flex-1 overflow-y-auto p-6 space-y-4" id="page-tasks" style="padding-bottom: 120px;"></div>
 
       <!-- Footer -->
       <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex gap-3 z-20">
@@ -254,18 +254,19 @@ function showRoomPage(roomKey) {
     container.appendChild(div);
   });
 
-  // Attach button events
+  // Attach button events properly
   const backBtn = page.querySelector('.back-btn');
   const cancelBtn = page.querySelector('.cancel-btn');
   const saveBtn = page.querySelector('.save-btn');
 
-  backBtn.onclick = () => closeRoomPage(page);
-  cancelBtn.onclick = () => closeRoomPage(page);
-  saveBtn.onclick = () => {
-    // Save logic here
+  const closeHandler = () => closeRoomPage(page);
+  
+  backBtn.addEventListener('click', closeHandler);
+  cancelBtn.addEventListener('click', closeHandler);
+  saveBtn.addEventListener('click', () => {
     window.showToast('Aufgaben gespeichert!');
     closeRoomPage(page);
-  };
+  });
 }
 
 function addSwipeBackGesture(page) {
