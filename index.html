@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SuperClean Pro - Reinigungsprotokoll</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -14,24 +14,16 @@
       font-family: 'Inter', system_ui, sans-serif;
     }
     
-    /* Force Light Mode - Remove all dark backgrounds */
-    body, 
-    .bg-white, 
-    .bg-slate-50,
-    .bg-slate-100 {
+    /* Force Light Mode */
+    body, .bg-white, .bg-slate-50, .bg-slate-100 {
       background-color: #ffffff !important;
     }
     
-    .dark\:bg-slate-900,
-    .dark\:bg-slate-800,
-    .dark\:bg-slate-700 {
+    .dark\:bg-slate-900, .dark\:bg-slate-800, .dark\:bg-slate-700 {
       background-color: #ffffff !important;
     }
     
-    /* Make sure all text is dark */
-    .text-slate-500,
-    .text-slate-600,
-    .text-slate-700 {
+    .text-slate-500, .text-slate-600, .text-slate-700 {
       color: #334155 !important;
     }
     
@@ -45,9 +37,23 @@
       box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
     }
     
-    .nav-tab.active {
-      color: #FF385C;
-      font-weight: 600;
+    .room-card {
+      min-height: 140px;
+    }
+    
+    @media (max-width: 640px) {
+      .room-card {
+        min-height: 120px;
+        padding: 1rem;
+      }
+      
+      .room-card .text-5xl {
+        font-size: 2.5rem;
+      }
+      
+      .room-card .text-xl {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
