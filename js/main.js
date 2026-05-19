@@ -167,7 +167,7 @@ function renderProtokollTab(container) {
       <div class="font-semibold text-xl text-slate-900 mb-1">${room.name}</div>
       <div class="text-sm text-slate-600">0 von ${room.tasks.length} erledigt</div>
     `;
-    card.onclick = () => openRoomModal(key);
+    card.onclick = () => showRoomPage(key);
     grid.appendChild(card);
   });
 
@@ -191,46 +191,68 @@ function getRoomIcon(key) {
   return icons[key] || '🏠';
 }
 
-function openRoomModal(roomKey) {
+// Full Page Slide (replaces modal)
+function showRoomPage(roomKey) {
   const room = roomsData.de[roomKey];
-  const modal = document.createElement('div');
-  modal.className = 'fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-[200]';
-  modal.innerHTML = `
-    <div class="bg-white w-full md:w-[520px] rounded-t-2xl md:rounded-2xl p-8 shadow-2xl">
-      <div class="flex justify-between items-start mb-8">
+  
+  const page = document.createElement('div');
+  page.className = 'fixed inset-0 bg-white z-[200] transform translate-x-full transition-transform duration-300';
+  page.innerHTML = `
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-5 border-b sticky top-0 bg-white z-10">
         <div class="flex items-center gap-4">
-          <div class="text-6xl">${getRoomIcon(roomKey)}</div>
-          <div>
-            <h3 class="text-2xl font-semibold text-slate-900">${room.name}</h3>
-            <p class="text-sm text-slate-600">${room.tasks.length} Aufgaben</p>
+          <button onclick="closeRoomPage(this)" class="text-3xl text-slate-400 hover:text-slate-600 w-10 h-10 flex items-center justify-center">
+            ←
+          </button>
+          <div class="flex items-center gap-4">
+            <div class="text-6xl">${getRoomIcon(roomKey)}</div>
+            <div>
+              <h2 class="text-3xl font-semibold text-slate-900">${room.name}</h2>
+              <p class="text-sm text-slate-600">${room.tasks.length} Aufgaben</p>
+            </div>
           </div>
         </div>
-        <button onclick="this.closest('.fixed').remove()" class="text-3xl text-slate-400 hover:text-slate-600">&times;</button>
       </div>
 
-      <div class="space-y-3 max-h-[55vh] overflow-auto pr-2" id="modal-tasks"></div>
+      <!-- Tasks -->
+      <div class="p-6 space-y-4" id="page-tasks"></div>
 
-      <div class="mt-8 flex gap-3">
-        <button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 border border-slate-300 rounded-xl font-semibold">Abbrechen</button>
-        <button onclick="saveRoomTasks(this)" class="flex-1 py-3 bg-[#FF385C] text-white rounded-xl font-semibold">Speichern</button>
+      <!-- Footer -->
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex gap-3">
+        <button onclick="closeRoomPage(this)" class="flex-1 py-4 border border-slate-300 rounded-2xl font-semibold">Abbrechen</button>
+        <button onclick="saveRoomTasks(this)" class="flex-1 py-4 bg-[#FF385C] text-white rounded-2xl font-semibold">Speichern</button>
       </div>
     </div>
   `;
-  document.body.appendChild(modal);
+  
+  document.body.appendChild(page);
+  
+  // Slide in animation
+  setTimeout(() => {
+    page.style.transform = 'translateX(0)';
+  }, 10);
 
-  const container = modal.querySelector('#modal-tasks');
+  // Render tasks
+  const container = page.querySelector('#page-tasks');
   room.tasks.forEach((task, i) => {
     const div = document.createElement('div');
     div.className = 'flex items-start gap-4 p-4 border border-slate-100 rounded-2xl';
     div.innerHTML = `
-      <input type="checkbox" class="mt-1 w-5 h-5 accent-[#FF385C]" id="modal-${roomKey}-${i}">
+      <input type="checkbox" class="mt-1 w-6 h-6 accent-[#FF385C]" id="page-${roomKey}-${i}">
       <div class="flex-1">
-        <label for="modal-${roomKey}-${i}" class="cursor-pointer text-base text-slate-900">${task}</label>
-        <input type="text" placeholder="Notiz (optional)" class="mt-2 w-full px-3 py-2 text-sm border border-slate-200 rounded-xl">
+        <label for="page-${roomKey}-${i}" class="cursor-pointer text-lg text-slate-900">${task}</label>
+        <input type="text" placeholder="Notiz (optional)" class="mt-2 w-full px-4 py-2 text-sm border border-slate-200 rounded-xl">
       </div>
     `;
     container.appendChild(div);
   });
+}
+
+function closeRoomPage(element) {
+  const page = element.closest('.fixed');
+  page.style.transform = 'translateX(100%)';
+  setTimeout(() => page.remove(), 300);
 }
 
 function renderHistoryTab(container) {
