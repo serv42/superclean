@@ -93,6 +93,30 @@ function renderProtokollTab(container) {
         </div>
       </div>
 
+      <!-- SIGNATURE PAD -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 mb-10 shadow-sm">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-10 h-10 bg-[#FF385C] bg-opacity-10 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-signature text-[#FF385C] text-2xl"></i>
+          </div>
+          <h2 class="text-3xl font-semibold text-slate-900">Unterschrift der Reinigungskraft</h2>
+        </div>
+        
+        <canvas id="signature-canvas" width="600" height="180" 
+                class="border border-slate-300 rounded-2xl w-full max-w-[600px] mx-auto touch-none bg-white cursor-crosshair"></canvas>
+        
+        <div class="flex justify-center gap-3 mt-5">
+          <button onclick="clearSignature()" 
+                  class="px-6 py-2 border border-slate-300 rounded-xl hover:bg-slate-100 transition-colors">
+            Löschen
+          </button>
+          <button onclick="saveSignature()" 
+                  class="px-6 py-2 bg-[#FF385C] text-white rounded-xl hover:bg-[#E31C5F] transition-colors">
+            Unterschrift speichern
+          </button>
+        </div>
+      </div>
+
       <div class="bg-white rounded-2xl border border-slate-200 p-8 mb-10 shadow-sm">
         <div class="flex items-center gap-4 mb-6">
           <div class="w-10 h-10 bg-[#FF385C] bg-opacity-10 rounded-xl flex items-center justify-center">
@@ -154,6 +178,10 @@ function renderProtokollTab(container) {
     div.innerHTML = `<input type="checkbox" class="accent-[#FF385C]"> <span>${item}</span>`;
     suppliesContainer.appendChild(div);
   });
+
+  setTimeout(() => {
+    initSignaturePad();
+  }, 300);
 
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
 }
