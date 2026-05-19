@@ -394,7 +394,7 @@ function renderHistoryTab(container) {
           <p class="text-slate-500">Erstelle dein erstes Protokoll im "Protokoll" Tab</p>
         </div>
       ` : protocols.map((p, index) => `
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" onclick="showProtocolModal(${index})">
+        <div class="history-item bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" data-index="${index}">
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="text-2xl font-semibold text-slate-900">${p.property}</h3>
@@ -415,6 +415,13 @@ function renderHistoryTab(container) {
     </div>
   `;
   container.innerHTML = html;
+  
+  // Attach click events properly
+  const items = container.querySelectorAll('.history-item');
+  items.forEach(item => {
+    const index = parseInt(item.getAttribute('data-index'));
+    item.addEventListener('click', () => showProtocolModal(index));
+  });
 }
 
 function showProtocolModal(index) {
@@ -478,9 +485,6 @@ function showProtocolModal(index) {
   `;
   document.body.appendChild(modal);
 }
-
-// Expose to global scope for onclick handlers
-window.showProtocolModal = showProtocolModal;
 
 function downloadProtocolPDF(index) {
   const protocols = Storage.get('superclean_protocols', []);
