@@ -196,8 +196,8 @@ function openRoomModal(roomKey) {
     div.innerHTML = `
       <input type="checkbox" class="mt-1 w-6 h-6 accent-[#FF385C]" id="modal-${roomKey}-${i}">
       <div class="flex-1">
-        <label for="modal-${roomKey}-${i}" class="cursor-pointer text-lg">${task}</label>
-        <input type="text" placeholder="Notiz (optional)" class="mt-2 w-full px-4 py-2 text-sm border border-slate-200 rounded-2xl">
+        <label for="modal-${roomKey}-${i}" class="cursor-pointer text-lg text-slate-900">${task}</label>
+        <input type="text" placeholder="Notiz (optional)" class="mt-2 w-full px-4 py-2 text-sm border border-slate-200 rounded-2xl text-slate-900">
       </div>
     `;
     container.appendChild(div);
