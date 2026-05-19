@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SuperClean Pro - Reinigungsprotokoll</title>
   
-  <!-- Tailwind via jsDelivr (2026 Best Practice) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css">
+  <!-- Official Tailwind Play CDN (most reliable) -->
+  <script src="https://cdn.tailwindcss.com"></script>
   
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
   
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -28,25 +28,18 @@
       min-height: 140px;
     }
     
-    /* 2026 Best Practice Mobile Header */
     @media (max-width: 640px) {
-      .mobile-header {
-        padding-top: env(safe-area-inset-top);
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-      
-      .mobile-title {
-        font-size: 1.75rem !important;
-        line-height: 1.1;
+      .room-card {
+        min-height: 120px;
+        padding: 1rem;
       }
     }
   </style>
 </head>
 <body class="bg-white">
   <div class="max-w-7xl mx-auto">
-    <!-- Header (2026 Mobile First) -->
-    <div class="flex items-center justify-between px-4 sm:px-8 py-5 border-b mobile-header">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 sm:px-8 py-5 border-b">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#FF385C] rounded-2xl flex items-center justify-center flex-shrink-0">
           <i class="fa-solid fa-broom text-white text-2xl sm:text-3xl"></i>
