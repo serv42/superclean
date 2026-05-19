@@ -39,14 +39,9 @@ function renderProtokollTab(container) {
   
   container.innerHTML = `
     <div class="max-w-4xl mx-auto pb-24 bg-white px-4 sm:px-6">
-      <div class="flex items-center gap-4 mb-10">
-        <div class="w-14 h-14 bg-[#FF385C] rounded-2xl flex items-center justify-center shadow-lg">
-          <i class="fa-solid fa-broom text-white text-3xl"></i>
-        </div>
-        <div>
-          <h1 class="text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900">Neues Reinigungsprotokoll</h1>
-          <p class="text-xl text-slate-700 mt-1">Bitte füllen Sie alle Felder sorgfältig aus.</p>
-        </div>
+      <div class="mb-8">
+        <h1 class="text-3xl sm:text-5xl font-semibold tracking-tight text-slate-900">Neues Reinigungsprotokoll</h1>
+        <p class="text-lg text-slate-700 mt-1">Bitte füllen Sie alle Felder sorgfältig aus.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
