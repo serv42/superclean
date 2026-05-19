@@ -202,7 +202,16 @@ function renderProtokollTab(container) {
 }
 
 function getRoomIcon(key) {
-  const icons = { kitchen: '🍳', living: '🛋️', bedroom: '🛏️', bathroom: '🚰️', hallway: '🚪', balcony: '☀️', laundry: '🧺', cellar: '🛠️' };
+  const icons = { 
+    kitchen: '🍳', 
+    living: '🛋️', 
+    bedroom: '🛏️', 
+    bathroom: '🚰️', 
+    hallway: '🚪', 
+    balcony: '🌞',   // Sonne für Balkon/Terrasse
+    laundry: '🧺', 
+    cellar: '📦'    // Paket für Keller
+  };
   return icons[key] || '🏠';
 }
 
