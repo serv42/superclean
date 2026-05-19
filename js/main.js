@@ -341,6 +341,9 @@ function showRoomPage(roomKey, cardElement) {
   cancelBtn.addEventListener('click', closeHandler);
   saveBtn.addEventListener('click', () => {
     window.showToast('Aufgaben gespeichert!');
+    // Re-render main tab so badges update live
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) renderProtokollTab(mainContent);
     closeRoomPage(page);
   });
 }
