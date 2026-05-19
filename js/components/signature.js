@@ -1,62 +1,99 @@
 let canvas, ctx, signatureData = null;
+let drawing = false;
+let lastX = 0, lastY = 0;
+
 
 export function initSignaturePad() {
     canvas = document.getElementById('signature-canvas');
     if (!canvas) return;
-    ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#10b981';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
 
-    let isDrawing = false;
-    let lastX = 0, lastY = 0;
+    // High-DPI / Retina Support für gestochen scharfe Linien
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+
+    ctx = canvas.getContext('2d', { alpha: true });
+    ctx.scale(dpr, dpr);
+    
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: ((e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX)) - rect.left),
+            y: ((e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY)) - rect.top)
+        };
+    }
 
     function start(e) {
-        isDrawing = true;
-        const rect = canvas.getBoundingClientRect();
-        lastX = (e.clientX || e.touches?.[0].clientX) - rect.left;
-        lastY = (e.clientY || e.touches?.[0].clientY) - rect.top;
+        e.preventDefault();
+        drawing = true;
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
     }
 
     function draw(e) {
-        if (!isDrawing) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches?.[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches?.[0].clientY) - rect.top;
-
+        if (!drawing) return;
+        e.preventDefault();
+        
+        const pos = getPos(e);
+        
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
-        ctx.lineTo(x, y);
+        ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
-        lastX = x; lastY = y;
+        
+        lastX = pos.x;
+        lastY = pos.y;
     }
 
-    function stop() { isDrawing = false; }
+    function stop() {
+        drawing = false;
+    }
 
+    // Mouse Events
     canvas.addEventListener('mousedown', start);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stop);
     canvas.addEventListener('mouseout', stop);
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); });
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+
+    // Touch Events - optimiert mit passive: false
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
     canvas.addEventListener('touchend', stop);
+    canvas.addEventListener('touchcancel', stop);
 }
 
 export function clearSignature() {
-    if (ctx && canvas) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        signatureData = null;
-    }
+    if (!canvas || !ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    signatureData = null;
+    if (window.showToast) window.showToast('Unterschrift gelöscht');
 }
 
 export function saveSignature() {
-    if (canvas) {
-        signatureData = canvas.toDataURL('image/png');
-        return signatureData;
-    }
-    return null;
+    if (!canvas) return null;
+    signatureData = canvas.toDataURL('image/png', 0.92);
+    if (window.showToast) window.showToast('Unterschrift gespeichert ✓');
+    return signatureData;
 }
 
 export function getSignature() {
     return signatureData;
+}
+
+export function hasSignature() {
+    return !!signatureData;
 }
