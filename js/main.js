@@ -160,7 +160,6 @@ function renderProtokollTab(container) {
     const card = document.createElement('div');
     card.className = `bg-white border border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#FF385C] active:scale-[0.985] transition-all room-card`;
     
-    // Get saved state
     const savedState = Storage.get(`room_${key}_state`, { checked: [] });
     const completedCount = savedState.checked.length;
     
@@ -198,7 +197,6 @@ function getRoomIcon(key) {
   return icons[key] || '🏠';
 }
 
-// Full Page Slide with persistent state
 let currentPage = null;
 let currentRoomKey = null;
 let currentCard = null;
@@ -208,14 +206,12 @@ function showRoomPage(roomKey, cardElement) {
   currentRoomKey = roomKey;
   currentCard = cardElement;
   
-  // Get saved state
-  const savedState = Storage.get(`room_${roomKey}_state`, { checked: [] });
+  const savedState = Storage.get(`room_${roomKey}_state`, { checked: [], notes: {} });
   
   const page = document.createElement('div');
   page.className = 'fixed inset-0 bg-white z-[200] transform translate-x-full transition-transform duration-300 overflow-hidden';
   page.innerHTML = `
     <div class="max-w-4xl mx-auto h-full flex flex-col">
-      <!-- Header -->
       <div class="flex items-center justify-between px-6 py-5 border-b sticky top-0 bg-white z-10 flex-shrink-0">
         <div class="flex items-center gap-4">
           <button class="back-btn text-3xl text-slate-400 hover:text-slate-600 w-10 h-10 flex items-center justify-center">
@@ -231,10 +227,8 @@ function showRoomPage(roomKey, cardElement) {
         </div>
       </div>
 
-      <!-- Scrollable Tasks -->
       <div class="flex-1 overflow-y-auto p-6 space-y-4" id="page-tasks" style="padding-bottom: 120px;"></div>
 
-      <!-- Footer -->
       <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex gap-3 z-20">
         <button class="cancel-btn flex-1 py-4 border border-slate-300 rounded-2xl font-semibold">Abbrechen</button>
         <button class="save-btn flex-1 py-4 bg-[#FF385C] text-white rounded-2xl font-semibold">Speichern</button>
@@ -245,15 +239,12 @@ function showRoomPage(roomKey, cardElement) {
   document.body.appendChild(page);
   currentPage = page;
   
-  // Slide in
   setTimeout(() => {
     page.style.transform = 'translateX(0)';
   }, 10);
 
-  // Add swipe back gesture
   addSwipeBackGesture(page);
 
-  // Render tasks with persistent state
   const container = page.querySelector('#page-tasks');
   const counter = page.querySelector('#task-counter');
   
@@ -267,24 +258,26 @@ function showRoomPage(roomKey, cardElement) {
       <input type="checkbox" class="mt-1 w-6 h-6 accent-[#FF385C]" id="page-${roomKey}-${i}">
       <div class="flex-1">
         <label for="page-${roomKey}-${i}" class="cursor-pointer text-lg text-slate-900">${task}</label>
-        <input type="text" placeholder="Notiz (optional)" class="mt-2 w-full px-4 py-2 text-sm border border-slate-200 rounded-xl">
+        <input type="text" placeholder="Notiz (optional)" class="mt-2 w-full px-4 py-2 text-sm border border-slate-200 rounded-xl note-input" data-index="${i}">
       </div>
     `;
     
     const checkbox = div.querySelector('input[type="checkbox"]');
+    const noteInput = div.querySelector('.note-input');
     
-    // Restore checked state
     if (savedState.checked.includes(i)) {
       checkbox.checked = true;
     }
     
+    if (savedState.notes && savedState.notes[i]) {
+      noteInput.value = savedState.notes[i];
+    }
+    
     checkbox.addEventListener('change', () => {
-      const currentState = Storage.get(`room_${roomKey}_state`, { checked: [] });
+      const currentState = Storage.get(`room_${roomKey}_state`, { checked: [], notes: {} });
       
       if (checkbox.checked) {
-        if (!currentState.checked.includes(i)) {
-          currentState.checked.push(i);
-        }
+        if (!currentState.checked.includes(i)) currentState.checked.push(i);
       } else {
         currentState.checked = currentState.checked.filter(idx => idx !== i);
       }
@@ -294,23 +287,24 @@ function showRoomPage(roomKey, cardElement) {
       const newCount = currentState.checked.length;
       counter.textContent = `${newCount}/${room.tasks.length} erledigt`;
       
-      // Update card counter
       if (currentCard) {
         const counterEl = currentCard.querySelector('.text-xs');
-        if (counterEl) {
-          counterEl.textContent = `${newCount}/${room.tasks.length}`;
-        }
+        if (counterEl) counterEl.textContent = `${newCount}/${room.tasks.length}`;
         const statusEl = currentCard.querySelector('.text-sm');
-        if (statusEl) {
-          statusEl.textContent = `${newCount} von ${room.tasks.length} erledigt`;
-        }
+        if (statusEl) statusEl.textContent = `${newCount} von ${room.tasks.length} erledigt`;
       }
+    });
+    
+    noteInput.addEventListener('blur', () => {
+      const currentState = Storage.get(`room_${roomKey}_state`, { checked: [], notes: {} });
+      if (!currentState.notes) currentState.notes = {};
+      currentState.notes[i] = noteInput.value;
+      Storage.set(`room_${roomKey}_state`, currentState);
     });
     
     container.appendChild(div);
   });
 
-  // Attach button events
   const backBtn = page.querySelector('.back-btn');
   const cancelBtn = page.querySelector('.cancel-btn');
   const saveBtn = page.querySelector('.save-btn');
@@ -376,25 +370,427 @@ function closeRoomPage(page) {
 }
 
 function renderHistoryTab(container) {
-  renderHistory(container, showProtocolModal, deleteProtocol);
+  const protocols = Storage.get('superclean_protocols', []);
+  
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-4xl font-semibold text-slate-900">Historie</h1>
+          <p class="text-slate-600 mt-1">${protocols.length} gespeicherte Protokolle</p>
+        </div>
+        <button onclick="clearAllHistory()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium">
+          Alle löschen
+        </button>
+      </div>
+      
+      ${protocols.length === 0 ? `
+        <div class="text-center py-16">
+          <i class="fa-solid fa-history text-6xl text-slate-300 mb-6"></i>
+          <h3 class="text-2xl font-semibold text-slate-700 mb-2">Noch keine Protokolle</h3>
+          <p class="text-slate-500">Erstelle dein erstes Protokoll im "Protokoll" Tab</p>
+        </div>
+      ` : protocols.map((p, index) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" onclick="showProtocolModal(${index})">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-2xl font-semibold text-slate-900">${p.property}</h3>
+              <p class="text-sm text-slate-600">${p.date} • ${p.cleaner}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-slate-500">${Object.keys(p.rooms || {}).length} Räume</div>
+              <div class="text-xs text-emerald-600 font-medium">${p.completedTasks || 0} Aufgaben erledigt</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <i class="fa-solid fa-clock"></i>
+            <span>${new Date(p.id).toLocaleDateString('de-DE')}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
-function renderSettingsTab(container) {
-  renderAdminSettings(container);
+function showProtocolModal(index) {
+  const protocols = Storage.get('superclean_protocols', []);
+  const p = protocols[index];
+  if (!p) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[300] p-4';
+  modal.innerHTML = `
+    <div class="bg-white w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h2 class="text-3xl font-semibold text-slate-900">${p.property}</h2>
+          <p class="text-slate-600">${p.date} • ${p.cleaner}</p>
+        </div>
+        <button onclick="this.closest('.fixed').remove()" class="text-4xl text-slate-400 hover:text-slate-600">&times;</button>
+      </div>
+      
+      <div class="space-y-6">
+        ${Object.keys(p.rooms || {}).map(key => {
+          const room = p.rooms[key];
+          const completed = room.checked ? room.checked.length : 0;
+          const total = roomsData.de[key] ? roomsData.de[key].tasks.length : 0;
+          return `
+            <div class="border border-slate-200 rounded-2xl p-5">
+              <div class="flex items-center gap-4 mb-4">
+                <div class="text-4xl">${getRoomIcon(key)}</div>
+                <div class="flex-1">
+                  <h4 class="font-semibold text-xl">${roomsData.de[key] ? roomsData.de[key].name : key}</h4>
+                  <p class="text-sm text-emerald-600">${completed} von ${total} erledigt</p>
+                </div>
+              </div>
+              
+              ${room.notes && Object.keys(room.notes).length > 0 ? `
+                <div class="mt-4 pt-4 border-t">
+                  <p class="text-sm font-medium text-slate-700 mb-2">Notizen:</p>
+                  ${Object.keys(room.notes).map(i => `
+                    <div class="text-sm text-slate-600 mb-1">
+                      • ${roomsData.de[key] ? roomsData.de[key].tasks[i] : ''}: <span class="font-medium">${room.notes[i]}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div class="mt-8 flex gap-3">
+        <button onclick="downloadProtocolPDF(${index}); this.closest('.fixed').remove()" class="flex-1 py-4 border border-[#FF385C] text-[#FF385C] rounded-2xl font-semibold">
+          PDF herunterladen
+        </button>
+        <button onclick="deleteProtocol(${p.id}, this.closest('.fixed')); this.closest('.fixed').remove()" class="flex-1 py-4 border border-red-300 text-red-600 rounded-2xl font-semibold">
+          Löschen
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
-function deleteProtocol(id, element) {
+function downloadProtocolPDF(index) {
+  const protocols = Storage.get('superclean_protocols', []);
+  const p = protocols[index];
+  if (!p) return;
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  doc.setFontSize(20);
+  doc.setTextColor(255, 56, 92);
+  doc.text('SuperClean Protokoll', 20, 25);
+  
+  doc.setFontSize(12);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`${p.property} • ${p.date}`, 20, 35);
+  doc.text(`Reinigungskraft: ${p.cleaner}`, 20, 42);
+  
+  let y = 55;
+  
+  Object.keys(p.rooms || {}).forEach(key => {
+    const room = p.rooms[key];
+    const roomData = roomsData.de[key];
+    
+    if (!roomData) return;
+    
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`${roomData.name}`, 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`${room.checked ? room.checked.length : 0} von ${roomData.tasks.length} Aufgaben erledigt`, 20, y);
+    y += 10;
+    
+    if (room.notes) {
+      Object.keys(room.notes).forEach(i => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`- ${roomData.tasks[i]}: ${room.notes[i]}`, 25, y);
+        y += 7;
+      });
+    }
+    
+    y += 8;
+    if (y > 260) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+  
+  doc.save(`Protokoll_${p.property.replace(/\s+/g, '_')}.pdf`);
+}
+
+function clearAllHistory() {
+  if (!confirm('Wirklich alle Protokolle löschen?')) return;
+  Storage.set('superclean_protocols', []);
+  renderHistoryTab(document.getElementById('main-content'));
+  window.showToast('Alle Protokolle gelöscht');
+}
+
+function renderHistoryTab(container) {
+  const protocols = Storage.get('superclean_protocols', []);
+  
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-4xl font-semibold text-slate-900">Historie</h1>
+          <p class="text-slate-600 mt-1">${protocols.length} gespeicherte Protokolle</p>
+        </div>
+        ${protocols.length > 0 ? `<button onclick="clearAllHistory()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium">Alle löschen</button>` : ''}
+      </div>
+      
+      ${protocols.length === 0 ? `
+        <div class="text-center py-16">
+          <i class="fa-solid fa-history text-6xl text-slate-300 mb-6"></i>
+          <h3 class="text-2xl font-semibold text-slate-700 mb-2">Noch keine Protokolle</h3>
+          <p class="text-slate-500">Erstelle dein erstes Protokoll im "Protokoll" Tab</p>
+        </div>
+      ` : protocols.map((p, index) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" onclick="showProtocolModal(${index})">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-2xl font-semibold text-slate-900">${p.property}</h3>
+              <p class="text-sm text-slate-600">${p.date} • ${p.cleaner}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-slate-500">${Object.keys(p.rooms || {}).length} Räume</div>
+              <div class="text-xs text-emerald-600 font-medium">${p.completedTasks || 0} Aufgaben erledigt</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <i class="fa-solid fa-clock"></i>
+            <span>${new Date(p.id).toLocaleDateString('de-DE')}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function showProtocolModal(index) {
+  const protocols = Storage.get('superclean_protocols', []);
+  const p = protocols[index];
+  if (!p) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-[300] p-4';
+  modal.innerHTML = `
+    <div class="bg-white w-full max-w-2xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h2 class="text-3xl font-semibold text-slate-900">${p.property}</h2>
+          <p class="text-slate-600">${p.date} • ${p.cleaner}</p>
+        </div>
+        <button onclick="this.closest('.fixed').remove()" class="text-4xl text-slate-400 hover:text-slate-600">&times;</button>
+      </div>
+      
+      <div class="space-y-6">
+        ${Object.keys(p.rooms || {}).map(key => {
+          const room = p.rooms[key];
+          const roomData = roomsData.de[key];
+          if (!roomData) return '';
+          
+          const completed = room.checked ? room.checked.length : 0;
+          return `
+            <div class="border border-slate-200 rounded-2xl p-5">
+              <div class="flex items-center gap-4 mb-4">
+                <div class="text-4xl">${getRoomIcon(key)}</div>
+                <div class="flex-1">
+                  <h4 class="font-semibold text-xl">${roomData.name}</h4>
+                  <p class="text-sm text-emerald-600">${completed} von ${roomData.tasks.length} erledigt</p>
+                </div>
+              </div>
+              
+              ${room.notes && Object.keys(room.notes).length > 0 ? `
+                <div class="mt-4 pt-4 border-t">
+                  <p class="text-sm font-medium text-slate-700 mb-2">Notizen:</p>
+                  ${Object.keys(room.notes).map(i => `
+                    <div class="text-sm text-slate-600 mb-1">
+                      • ${roomData.tasks[i]}: <span class="font-medium">${room.notes[i]}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div class="mt-8 flex gap-3">
+        <button onclick="downloadProtocolPDF(${index}); this.closest('.fixed').remove()" class="flex-1 py-4 border border-[#FF385C] text-[#FF385C] rounded-2xl font-semibold">
+          PDF herunterladen
+        </button>
+        <button onclick="deleteProtocol(${p.id}, this.closest('.fixed')); this.closest('.fixed').remove()" class="flex-1 py-4 border border-red-300 text-red-600 rounded-2xl font-semibold">
+          Löschen
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function downloadProtocolPDF(index) {
+  const protocols = Storage.get('superclean_protocols', []);
+  const p = protocols[index];
+  if (!p) return;
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  doc.setFontSize(20);
+  doc.setTextColor(255, 56, 92);
+  doc.text('SuperClean Protokoll', 20, 25);
+  
+  doc.setFontSize(12);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`${p.property} • ${p.date}`, 20, 35);
+  doc.text(`Reinigungskraft: ${p.cleaner}`, 20, 42);
+  
+  let y = 55;
+  
+  Object.keys(p.rooms || {}).forEach(key => {
+    const room = p.rooms[key];
+    const roomData = roomsData.de[key];
+    if (!roomData) return;
+    
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`${roomData.name}`, 20, y);
+    y += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`${room.checked ? room.checked.length : 0} von ${roomData.tasks.length} Aufgaben erledigt`, 20, y);
+    y += 10;
+    
+    if (room.notes) {
+      Object.keys(room.notes).forEach(i => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`- ${roomData.tasks[i]}: ${room.notes[i]}`, 25, y);
+        y += 7;
+      });
+    }
+    
+    y += 8;
+    if (y > 260) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+  
+  doc.save(`Protokoll_${p.property.replace(/\s+/g, '_')}.pdf`);
+}
+
+function deleteProtocol(id, modal) {
   if (!confirm('Protokoll wirklich löschen?')) return;
-  let p = Storage.get('superclean_protocols', []);
-  p = p.filter(x => x.id !== id);
-  Storage.set('superclean_protocols', p);
-  element.remove();
+  
+  let protocols = Storage.get('superclean_protocols', []);
+  protocols = protocols.filter(p => p.id !== id);
+  Storage.set('superclean_protocols', protocols);
+  
+  if (modal) modal.remove();
+  renderHistoryTab(document.getElementById('main-content'));
   window.showToast('Protokoll gelöscht');
 }
 
-window.saveProtocol = function() {
+function renderHistoryTab(container) {
+  const protocols = Storage.get('superclean_protocols', []);
+  
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-4xl font-semibold text-slate-900">Historie</h1>
+          <p class="text-slate-600 mt-1">${protocols.length} gespeicherte Protokolle</p>
+        </div>
+        ${protocols.length > 0 ? `<button onclick="clearAllHistory()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium">Alle löschen</button>` : ''}
+      </div>
+      
+      ${protocols.length === 0 ? `
+        <div class="text-center py-16">
+          <i class="fa-solid fa-history text-6xl text-slate-300 mb-6"></i>
+          <h3 class="text-2xl font-semibold text-slate-700 mb-2">Noch keine Protokolle</h3>
+          <p class="text-slate-500">Erstelle dein erstes Protokoll im "Protokoll" Tab</p>
+        </div>
+      ` : protocols.map((p, index) => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" onclick="showProtocolModal(${index})">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-2xl font-semibold text-slate-900">${p.property}</h3>
+              <p class="text-sm text-slate-600">${p.date} • ${p.cleaner}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-slate-500">${Object.keys(p.rooms || {}).length} Räume</div>
+              <div class="text-xs text-emerald-600 font-medium">${p.completedTasks || 0} Aufgaben erledigt</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <i class="fa-solid fa-clock"></i>
+            <span>${new Date(p.id).toLocaleDateString('de-DE')}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function saveProtocol() {
+  const data = {
+    id: Date.now(),
+    property: document.getElementById('property-select').value,
+    cleaner: document.getElementById('cleaner').value,
+    date: document.getElementById('date').value,
+    rooms: {},
+    completedTasks: 0,
+    language: 'de'
+  };
+  
+  let totalCompleted = 0;
+  
+  Object.keys(roomsData.de).forEach(key => {
+    const savedState = Storage.get(`room_${key}_state`, { checked: [], notes: {} });
+    data.rooms[key] = {
+      checked: savedState.checked || [],
+      notes: savedState.notes || {}
+    };
+    totalCompleted += (savedState.checked || []).length;
+  });
+  
+  data.completedTasks = totalCompleted;
+  
+  let protocols = Storage.get('superclean_protocols', []);
+  protocols.unshift(data);
+  Storage.set('superclean_protocols', protocols);
+  
   window.showToast('Protokoll erfolgreich gespeichert!');
-};
+  
+  // Clear all room states after saving
+  Object.keys(roomsData.de).forEach(key => {
+    Storage.set(`room_${key}_state`, { checked: [], notes: {} });
+  });
+  
+  // Refresh the current tab
+  setTimeout(() => {
+    const content = document.getElementById('main-content');
+    content.innerHTML = '';
+    renderProtokollTab(content);
+  }, 500);
+}
 
 window.generatePDF = function() {
   const { jsPDF } = window.jspdf;
