@@ -2,21 +2,22 @@ import { Storage } from '../utils/storage.js';
 
 export function renderSettings(container) {
     container.innerHTML = `
-        <div class="max-w-2xl">
+        <div class="max-w-2xl mx-auto">
             <h1 class="text-4xl font-bold mb-2">Einstellungen</h1>
             <p class="text-slate-600 dark:text-slate-400 mb-8">Admin-Bereich • PIN: 12351235</p>
 
             <div class="bg-white dark:bg-slate-800 rounded-3xl border p-8">
-                <div class="mb-6">
-                    <label class="font-semibold">Admin-PIN</label>
-                    <div class="flex gap-3 mt-2">
+                <!-- PIN -->
+                <div class="mb-8">
+                    <label class="font-semibold block mb-2">Admin-PIN</label>
+                    <div class="flex gap-3">
                         <input id="admin-pin" type="password" placeholder="PIN eingeben" class="flex-1 px-4 py-3 border rounded-2xl">
-                        <button onclick="unlockAdminSettings()" class="px-8 py-3 bg-emerald-600 text-white rounded-2xl font-medium">Entsperren</button>
+                        <button onclick="unlockAdmin()" class="px-8 py-3 bg-emerald-600 text-white rounded-2xl font-medium">Entsperren</button>
                     </div>
                 </div>
 
-                <div id="admin-panel" class="hidden space-y-8">
-                    <!-- Company Name -->
+                <div id="admin-content" class="hidden space-y-8">
+                    <!-- Company -->
                     <div>
                         <label class="font-semibold">Firmenname</label>
                         <input id="company-name" class="w-full px-4 py-3 border rounded-2xl mt-2" value="SuperClean Pro">
@@ -24,76 +25,83 @@ export function renderSettings(container) {
 
                     <!-- Email Sender URL -->
                     <div>
-                        <label class="font-semibold">Live E-Mail Versand URL</label>
-                        <input id="email-sender-url" placeholder="https://deine-domain.de/php-helper/sender.php" class="w-full px-4 py-3 border rounded-2xl mt-2 text-sm">
-                        <p class="text-xs text-slate-500 mt-1">URL zu deiner sender.php (siehe php-helper/README.md)</p>
+                        <label class="font-semibold">PHP Sender URL</label>
+                        <input id="php-sender-url" placeholder="https://deine-domain.de/php-helper/sender.php" class="w-full px-4 py-3 border rounded-2xl mt-2">
+                        <p class="text-xs text-slate-500 mt-1">URL zu deiner sender.php</p>
                     </div>
 
-                    <!-- Properties -->
-                    <div>
-                        <label class="font-semibold">Gespeicherte Objekte</label>
-                        <div id="admin-properties-list" class="mt-2 space-y-2"></div>
-                        <div class="flex gap-2 mt-3">
-                            <input id="new-prop" placeholder="Neues Objekt" class="flex-1 px-4 py-2 border rounded-2xl">
-                            <button onclick="addPropertyFromSettings()" class="px-6 py-2 bg-emerald-600 text-white rounded-2xl">+</button>
+                    <!-- SMTP Settings -->
+                    <div class="border-t pt-6">
+                        <h3 class="font-semibold mb-4 flex items-center gap-x-2">
+                            <i class="fa-solid fa-server"></i> 
+                            <span>SMTP Einstellungen (empfohlen)</span>
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm">SMTP Host</label>
+                                <input id="smtp-host" placeholder="smtp.gmail.com" class="w-full px-4 py-2.5 border rounded-2xl mt-1 text-sm">
+                            </div>
+                            <div>
+                                <label class="text-sm">Port</label>
+                                <input id="smtp-port" placeholder="587" class="w-full px-4 py-2.5 border rounded-2xl mt-1 text-sm">
+                            </div>
+                            <div>
+                                <label class="text-sm">Benutzername (E-Mail)</label>
+                                <input id="smtp-user" placeholder="deine@email.de" class="w-full px-4 py-2.5 border rounded-2xl mt-1 text-sm">
+                            </div>
+                            <div>
+                                <label class="text-sm">Passwort / App-Passwort</label>
+                                <input id="smtp-pass" type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border rounded-2xl mt-1 text-sm">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-sm">Verschlüsselung</label>
+                                <select id="smtp-encryption" class="w-full px-4 py-2.5 border rounded-2xl mt-1 text-sm">
+                                    <option value="tls">TLS (empfohlen)</option>
+                                    <option value="ssl">SSL</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <button onclick="saveAllSettings()" class="w-full py-3 bg-emerald-600 text-white rounded-3xl font-semibold mt-4">Alle Einstellungen speichern</button>
+                    <button onclick="saveSettings()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-semibold mt-6">Einstellungen speichern</button>
                 </div>
             </div>
         </div>
     `;
 
     // Load saved values
-    const urlInput = document.getElementById('email-sender-url');
-    const savedUrl = Storage.get('superclean_email_sender_url', '');
-    if (urlInput && savedUrl) urlInput.value = savedUrl;
+    const saved = {
+        url: Storage.get('superclean_php_url', ''),
+        host: Storage.get('superclean_smtp_host', ''),
+        port: Storage.get('superclean_smtp_port', '587'),
+        user: Storage.get('superclean_smtp_user', ''),
+        pass: Storage.get('superclean_smtp_pass', ''),
+        enc: Storage.get('superclean_smtp_enc', 'tls')
+    };
 
-    window.unlockAdminSettings = function() {
-        const pin = document.getElementById('admin-pin').value;
-        if (pin === '12351235') {
-            document.getElementById('admin-panel').classList.remove('hidden');
-            loadPropertiesList();
+    if (saved.url) document.getElementById('php-sender-url').value = saved.url;
+    if (saved.host) document.getElementById('smtp-host').value = saved.host;
+    if (saved.port) document.getElementById('smtp-port').value = saved.port;
+    if (saved.user) document.getElementById('smtp-user').value = saved.user;
+    if (saved.enc) document.getElementById('smtp-encryption').value = saved.enc;
+
+    window.unlockAdmin = function() {
+        if (document.getElementById('admin-pin').value === '12351235') {
+            document.getElementById('admin-content').classList.remove('hidden');
         } else {
             alert('Falsche PIN!');
         }
     };
 
-    window.addPropertyFromSettings = function() {
-        const input = document.getElementById('new-prop');
-        if (!input.value.trim()) return;
-        let props = Storage.get('superclean_properties', []);
-        props.push(input.value.trim());
-        Storage.set('superclean_properties', props);
-        loadPropertiesList();
-        input.value = '';
-    };
+    window.saveSettings = function() {
+        Storage.set('superclean_php_url', document.getElementById('php-sender-url').value.trim());
+        Storage.set('superclean_smtp_host', document.getElementById('smtp-host').value.trim());
+        Storage.set('superclean_smtp_port', document.getElementById('smtp-port').value.trim());
+        Storage.set('superclean_smtp_user', document.getElementById('smtp-user').value.trim());
+        Storage.set('superclean_smtp_pass', document.getElementById('smtp-pass').value.trim());
+        Storage.set('superclean_smtp_enc', document.getElementById('smtp-encryption').value);
 
-    window.saveAllSettings = function() {
-        const url = document.getElementById('email-sender-url').value.trim();
-        Storage.set('superclean_email_sender_url', url);
-        const company = document.getElementById('company-name').value;
-        Storage.set('superclean_company', company);
-        alert('Einstellungen gespeichert!');
-    };
-
-    function loadPropertiesList() {
-        const container = document.getElementById('admin-properties-list');
-        container.innerHTML = '';
-        const props = Storage.get('superclean_properties', []);
-        props.forEach((p, i) => {
-            const div = document.createElement('div');
-            div.className = 'flex justify-between items-center bg-slate-100 dark:bg-slate-700 px-4 py-2 rounded-2xl';
-            div.innerHTML = `<span>${p}</span><button class="text-red-500 px-3" onclick="removeProperty(${i})"><i class="fa-solid fa-trash"></i></button>`;
-            container.appendChild(div);
-        });
-    }
-
-    window.removeProperty = function(index) {
-        let props = Storage.get('superclean_properties', []);
-        props.splice(index, 1);
-        Storage.set('superclean_properties', props);
-        loadPropertiesList();
+        alert('Einstellungen erfolgreich gespeichert!');
     };
 }

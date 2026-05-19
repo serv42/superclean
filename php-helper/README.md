@@ -1,40 +1,67 @@
-# PHP E-Mail Sender für SuperClean
+# PHP E-Mail Sender mit SMTP (PHPMailer)
 
-Dieses Skript ermöglicht echten E-Mail-Versand aus der SuperClean WebApp heraus.
+Diese Version unterstützt **echten SMTP-Versand** mit Authentifizierung (z. B. Gmail, Office365, Web.de, GMX, all-inkl Mail etc.).
 
-## Voraussetzungen
-- Shared Hosting mit PHP (z.B. all-inkl.com, HostEurope, Strato, 1&1 etc.)
-- Die Domain muss E-Mails versenden können (meist standardmäßig aktiviert)
+## Zwei Modi
 
-## Installation (all-inkl.com Beispiel)
+1. **Einfacher Modus** (`mail()`) – funktioniert ohne weitere Dateien
+2. **Professioneller Modus** (PHPMailer + SMTP) – deutlich zuverlässiger
 
-1. Logge dich in dein all-inkl Kundenmenü ein
-2. Gehe zu **Dateimanager** oder **FTP**
-3. Erstelle im Hauptverzeichnis deiner Domain einen neuen Ordner namens `php-helper`
-4. Lade die Datei `sender.php` in diesen Ordner hoch
-5. Setze die Dateirechte auf **644** (meist Standard)
-6. Öffne die Datei im Browser:
-   `https://deine-domain.de/php-helper/sender.php`
+---
 
-   Du solltest eine JSON-Fehlermeldung sehen (das ist normal).
+## Installation (all-inkl & andere Shared Hoster)
 
-## In der SuperClean App eintragen
+### Schritt 1: Ordner anlegen
+- Erstelle im Hauptverzeichnis deiner Domain den Ordner `php-helper`
 
-1. Öffne die SuperClean WebApp
-2. Gehe auf **Einstellungen** (Zahnrad-Symbol)
-3. Klicke auf **Admin-PIN** und gib `12351235` ein
-4. Trage unter **"Live E-Mail Versand URL"** die volle URL ein:
-   `https://deine-domain.de/php-helper/sender.php`
+### Schritt 2: Dateien hochladen
+Lade folgende Dateien hoch:
+- `sender.php` (bereits aktualisiert)
+- `PHPMailer/` Ordner (siehe unten)
+
+### Schritt 3: PHPMailer installieren (einmalig)
+
+**Empfohlene Methode (einfachste):**
+
+1. Gehe auf https://github.com/PHPMailer/PHPMailer/releases
+2. Lade die neueste Version herunter (z. B. `PHPMailer-6.9.1.zip`)
+3. Entpacke die ZIP-Datei
+4. Lade den gesamten Ordner `src` hoch in `php-helper/PHPMailer/src/`
+
+   Deine Struktur sollte so aussehen:
+   ```
+   php-helper/
+   ├── sender.php
+   └── PHPMailer/
+       └── src/
+           ├── PHPMailer.php
+           ├── SMTP.php
+           └── Exception.php
+   ```
+
+### Schritt 4: In der App konfigurieren
+
+1. Öffne SuperClean
+2. Gehe zu **Einstellungen** (Zahnrad)
+3. PIN: `12351235`
+4. Fülle folgende Felder aus:
+   - **Live E-Mail Versand URL** → `https://deine-domain.de/php-helper/sender.php`
+   - **SMTP Host** → z. B. `smtp.gmail.com` oder `mail.deine-domain.de`
+   - **SMTP Port** → `587` (TLS) oder `465` (SSL)
+   - **SMTP Benutzername** → deine E-Mail-Adresse
+   - **SMTP Passwort** → App-Passwort (bei Gmail) oder normales Passwort
+   - **Verschlüsselung** → `tls` oder `ssl`
+
 5. Speichern
 
-Ab sofort funktioniert der Button **"Per E-Mail senden"** mit echtem Versand!
+Ab sofort wird beim Button "Per E-Mail senden" **echter SMTP-Versand** verwendet!
+
+---
 
 ## Wichtige Hinweise
-- Ersetze `deine-domain.de` durch deine echte Domain
-- Auf manchen Hostern muss man die Absender-Adresse noch freischalten (z.B. bei all-inkl im Webmail)
-- Das Skript verwendet die PHP `mail()`-Funktion (funktioniert auf fast allen Shared Hostern)
 
-## Erweiterung (optional)
-Später kann man hier noch echte SMTP-Authentifizierung (z.B. mit PHPMailer) einbauen.
+- Bei Gmail brauchst du ein **App-Passwort** (nicht dein normales Passwort!)
+- Bei all-inkl kannst du meist den Mailserver deines Hosting-Pakets verwenden
+- Das Skript fällt automatisch auf `mail()` zurück, falls PHPMailer nicht gefunden wird
 
 Viel Erfolg! 🚀

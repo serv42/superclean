@@ -3,13 +3,9 @@ import { createRoomSection, getRoomData } from './components/room-checklist.js';
 import { initSignaturePad, clearSignature, saveSignature, getSignature } from './components/signature.js';
 import { renderHistory, showProtocolModal } from './components/history.js';
 import { renderSettings } from './components/settings.js';
-
 import { roomsData } from './data/rooms.js';
 
-let currentTab = 'protokoll';
-
 window.showTab = function(tab) {
-    currentTab = tab;
     const content = document.getElementById('main-content');
     content.innerHTML = '';
 
@@ -19,7 +15,7 @@ window.showTab = function(tab) {
 
     if (tab === 'protokoll') renderProtokoll(content);
     else if (tab === 'historie') renderHistoryTab(content);
-    else if (tab === 'settings') renderSettingsTab(content);
+    else if (tab === 'settings') renderSettings(content);
 };
 
 function renderProtokoll(container) {
@@ -37,7 +33,7 @@ function renderProtokoll(container) {
         <div id="rooms-container"></div>
 
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 mt-8 border">
-            <h3 class="font-semibold text-xl mb-4">Unterschrift der Reinigungskraft</h3>
+            <h3 class="font-semibold text-xl mb-4">Unterschrift</h3>
             <canvas id="signature-canvas" width="600" height="180" class="signature-canvas w-full max-w-[600px]"></canvas>
             <div class="flex gap-3 mt-4">
                 <button onclick="clearSignature()" class="px-6 py-2 border rounded-2xl">Löschen</button>
@@ -47,50 +43,42 @@ function renderProtokoll(container) {
 
         <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <button onclick="saveProtocol()" class="bg-emerald-600 text-white py-4 rounded-3xl font-semibold">Protokoll speichern</button>
-            <button onclick="generatePDF()" class="border border-emerald-600 text-emerald-600 py-4 rounded-3xl font-semibold">PDF herunterladen</button>
-            <button onclick="sendLiveEmail()" class="border border-slate-300 py-4 rounded-3xl font-semibold">Per E-Mail senden</button>
+            <button onclick="generatePDF()" class="border border-emerald-600 text-emerald-600 py-4 rounded-3xl font-semibold">PDF</button>
+            <button onclick="sendLiveEmail()" class="border border-slate-300 py-4 rounded-3xl font-semibold">Per E-Mail senden (SMTP)</button>
         </div>
     `;
 
-    // Load properties
-    const select = document.getElementById('property-select');
     const props = Storage.get('superclean_properties', ['Musterstraße 12, 10115 Berlin']);
+    const select = document.getElementById('property-select');
     props.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p; opt.textContent = p;
         select.appendChild(opt);
     });
 
-    // Render rooms
     const roomsCont = document.getElementById('rooms-container');
     Object.keys(roomsData.de).forEach(key => {
         const sec = createRoomSection(key);
         if (sec) roomsCont.appendChild(sec);
     });
 
-    setTimeout(() => initSignaturePad(), 150);
+    setTimeout(() => initSignaturePad(), 100);
 }
 
-function renderHistoryTab(container) {
-    const listContainer = document.createElement('div');
-    container.appendChild(listContainer);
-    renderHistory(listContainer, showProtocolModal, deleteProtocol);
-}
+function renderHistoryTab(c) { renderHistory(c, showProtocolModal, deleteProtocol); }
 
-function renderSettingsTab(container) {
-    renderSettings(container);
-}
+function renderSettings(c) { renderSettings(c); }
 
-function deleteProtocol(id, element) {
-    if (!confirm('Protokoll wirklich löschen?')) return;
-    let protocols = Storage.get('superclean_protocols', []);
-    protocols = protocols.filter(p => p.id !== id);
-    Storage.set('superclean_protocols', protocols);
-    element.remove();
+function deleteProtocol(id, el) {
+    if (!confirm('Wirklich löschen?')) return;
+    let p = Storage.get('superclean_protocols', []);
+    p = p.filter(x => x.id !== id);
+    Storage.set('superclean_protocols', p);
+    el.remove();
 }
 
 window.saveProtocol = function() {
-    const protocol = {
+    const data = {
         id: Date.now(),
         property: document.getElementById('property-select').value,
         cleaner: document.getElementById('cleaner').value,
@@ -98,75 +86,64 @@ window.saveProtocol = function() {
         rooms: {},
         issues: document.getElementById('issues')?.value || '',
         signature: getSignature(),
-        language: 'de',
-        timestamp: new Date().toISOString()
+        language: 'de'
     };
-
-    Object.keys(roomsData.de).forEach(key => {
-        protocol.rooms[key] = getRoomData(key);
-    });
+    Object.keys(roomsData.de).forEach(k => data.rooms[k] = getRoomData(k));
 
     let protocols = Storage.get('superclean_protocols', []);
-    protocols.unshift(protocol);
+    protocols.unshift(data);
     Storage.set('superclean_protocols', protocols);
-
-    alert('Protokoll erfolgreich gespeichert!');
+    alert('Protokoll gespeichert!');
 };
 
 window.generatePDF = function() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    doc.text('SuperClean Protokoll (Refactored)', 20, 20);
+    doc.text('SuperClean Protokoll', 20, 20);
     doc.save('protokoll.pdf');
 };
 
 window.sendLiveEmail = async function() {
-    const url = Storage.get('superclean_email_sender_url', '');
-    if (!url) {
-        alert('Bitte zuerst die E-Mail-Versand-URL in den Einstellungen eintragen!');
+    const phpUrl = Storage.get('superclean_php_url', '');
+    if (!phpUrl) {
+        alert('Bitte PHP Sender URL in den Einstellungen eintragen!');
         return;
     }
 
-    const protocol = {
-        to: prompt('E-Mail-Adresse des Empfängers:'),
+    const payload = {
+        to: prompt('Empfänger E-Mail:'),
         subject: `Reinigungsprotokoll - ${document.getElementById('property-select').value}`,
-        body: `Hallo,\n\nHier das Protokoll für ${document.getElementById('property-select').value} vom ${document.getElementById('date').value}.\n\nReinigungskraft: ${document.getElementById('cleaner').value}\n\nViele Grüße\nSuperClean Team`
+        body: `Hallo,\n\nProtokoll für: ${document.getElementById('property-select').value}\nDatum: ${document.getElementById('date').value}\nReinigungskraft: ${document.getElementById('cleaner').value}\n\nViele Grüße\nSuperClean`,
+        from: Storage.get('superclean_smtp_user', 'noreply@deine-domain.de'),
+        smtp_host: Storage.get('superclean_smtp_host', ''),
+        smtp_port: Storage.get('superclean_smtp_port', 587),
+        smtp_user: Storage.get('superclean_smtp_user', ''),
+        smtp_pass: Storage.get('superclean_smtp_pass', ''),
+        smtp_encryption: Storage.get('superclean_smtp_enc', 'tls')
     };
 
-    if (!protocol.to) return;
+    if (!payload.to) return;
 
     try {
-        const res = await fetch(url, {
+        const res = await fetch(phpUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(protocol)
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (data.success) {
-            alert('E-Mail wurde erfolgreich versendet!');
-        } else {
-            alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
-        }
-    } catch (e) {
-        alert('Verbindung zum Server fehlgeschlagen. Bitte URL überprüfen.');
+        const result = await res.json();
+        alert(result.success ? 'E-Mail erfolgreich versendet!' : 'Fehler: ' + (result.error || result.warning));
+    } catch(e) {
+        alert('Verbindung fehlgeschlagen. Bitte URL und SMTP-Daten prüfen.');
     }
 };
 
-// Init
-(function init() {
-    const nav = document.getElementById('nav-tabs');
-    nav.innerHTML = `
-        <div onclick="window.showTab('protokoll')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer active" id="tab-protokoll">
-            <i class="fa-solid fa-clipboard-list"></i> <span>Neues Protokoll</span>
-        </div>
-        <div onclick="window.showTab('historie')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer" id="tab-historie">
-            <i class="fa-solid fa-history"></i> <span>Historie</span>
-        </div>
-        <div onclick="window.showTab('settings')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer" id="tab-settings">
-            <i class="fa-solid fa-cog"></i> <span>Einstellungen</span>
-        </div>
+// Navbar + Start
+(function() {
+    document.getElementById('nav-tabs').innerHTML = `
+        <div onclick="window.showTab('protokoll')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer active" id="tab-protokoll"><i class="fa-solid fa-clipboard-list"></i> <span>Neues Protokoll</span></div>
+        <div onclick="window.showTab('historie')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer" id="tab-historie"><i class="fa-solid fa-history"></i> <span>Historie</span></div>
+        <div onclick="window.showTab('settings')" class="nav-tab px-5 py-2.5 flex items-center gap-x-2 cursor-pointer" id="tab-settings"><i class="fa-solid fa-cog"></i> <span>Einstellungen</span></div>
         <div onclick="document.documentElement.classList.toggle('dark')" class="px-3 py-2.5 cursor-pointer"><i class="fa-solid fa-moon"></i></div>
     `;
-
     window.showTab('protokoll');
 })();
