@@ -416,7 +416,6 @@ function renderHistoryTab(container) {
   `;
   container.innerHTML = html;
   
-  // Attach click events properly
   const items = container.querySelectorAll('.history-item');
   items.forEach(item => {
     const index = parseInt(item.getAttribute('data-index'));
@@ -559,6 +558,12 @@ function deleteProtocol(id, modal) {
   renderHistoryTab(document.getElementById('main-content'));
   window.showToast('Protokoll gelöscht');
 }
+
+// Expose all functions to global scope
+window.showProtocolModal = showProtocolModal;
+window.downloadProtocolPDF = downloadProtocolPDF;
+window.deleteProtocol = deleteProtocol;
+window.clearAllHistory = clearAllHistory;
 
 function saveProtocol() {
   const data = {
