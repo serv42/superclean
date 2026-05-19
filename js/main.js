@@ -159,15 +159,20 @@ function renderProtokollTab(container) {
     const room = roomsData.de[key];
     const card = document.createElement('div');
     card.className = `bg-white border border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#FF385C] active:scale-[0.985] transition-all room-card`;
+    
+    // Get saved state
+    const savedState = Storage.get(`room_${key}_state`, { checked: [] });
+    const completedCount = savedState.checked.length;
+    
     card.innerHTML = `
       <div class="flex justify-between items-start mb-5">
         <div class="text-5xl">${getRoomIcon(key)}</div>
         <div class="text-right">
-          <div class="text-xs text-slate-500">0/${room.tasks.length}</div>
+          <div class="text-xs text-slate-500">${completedCount}/${room.tasks.length}</div>
         </div>
       </div>
       <div class="font-semibold text-xl text-slate-900 mb-1">${room.name}</div>
-      <div class="text-sm text-slate-600">0 von ${room.tasks.length} erledigt</div>
+      <div class="text-sm text-slate-600">${completedCount} von ${room.tasks.length} erledigt</div>
     `;
     card.onclick = () => showRoomPage(key, card);
     grid.appendChild(card);
@@ -193,7 +198,7 @@ function getRoomIcon(key) {
   return icons[key] || '🏠';
 }
 
-// Full Page Slide with live counter
+// Full Page Slide with persistent state
 let currentPage = null;
 let currentRoomKey = null;
 let currentCard = null;
@@ -202,6 +207,9 @@ function showRoomPage(roomKey, cardElement) {
   const room = roomsData.de[roomKey];
   currentRoomKey = roomKey;
   currentCard = cardElement;
+  
+  // Get saved state
+  const savedState = Storage.get(`room_${roomKey}_state`, { checked: [] });
   
   const page = document.createElement('div');
   page.className = 'fixed inset-0 bg-white z-[200] transform translate-x-full transition-transform duration-300 overflow-hidden';
@@ -245,11 +253,12 @@ function showRoomPage(roomKey, cardElement) {
   // Add swipe back gesture
   addSwipeBackGesture(page);
 
-  // Render tasks with live counter
+  // Render tasks with persistent state
   const container = page.querySelector('#page-tasks');
   const counter = page.querySelector('#task-counter');
   
-  let completedCount = 0;
+  let completedCount = savedState.checked.length;
+  counter.textContent = `${completedCount}/${room.tasks.length} erledigt`;
   
   room.tasks.forEach((task, i) => {
     const div = document.createElement('div');
@@ -263,19 +272,37 @@ function showRoomPage(roomKey, cardElement) {
     `;
     
     const checkbox = div.querySelector('input[type="checkbox"]');
+    
+    // Restore checked state
+    if (savedState.checked.includes(i)) {
+      checkbox.checked = true;
+    }
+    
     checkbox.addEventListener('change', () => {
+      const currentState = Storage.get(`room_${roomKey}_state`, { checked: [] });
+      
       if (checkbox.checked) {
-        completedCount++;
+        if (!currentState.checked.includes(i)) {
+          currentState.checked.push(i);
+        }
       } else {
-        completedCount--;
+        currentState.checked = currentState.checked.filter(idx => idx !== i);
       }
-      counter.textContent = `${completedCount}/${room.tasks.length} erledigt`;
+      
+      Storage.set(`room_${roomKey}_state`, currentState);
+      
+      const newCount = currentState.checked.length;
+      counter.textContent = `${newCount}/${room.tasks.length} erledigt`;
       
       // Update card counter
       if (currentCard) {
         const counterEl = currentCard.querySelector('.text-xs');
         if (counterEl) {
-          counterEl.textContent = `${completedCount}/${room.tasks.length}`;
+          counterEl.textContent = `${newCount}/${room.tasks.length}`;
+        }
+        const statusEl = currentCard.querySelector('.text-sm');
+        if (statusEl) {
+          statusEl.textContent = `${newCount} von ${room.tasks.length} erledigt`;
         }
       }
     });
