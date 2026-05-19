@@ -34,6 +34,9 @@ window.showTab = function(tab) {
 };
 
 function renderProtokollTab(container) {
+  const savedCleaner = Storage.get('superclean_cleaner_name', 'Maria Schmidt');
+  const savedProperty = Storage.get('superclean_property_address', 'Musterstraße 12, 10115 Berlin');
+  
   container.innerHTML = `
     <div class="max-w-4xl mx-auto pb-24 bg-white">
       <div class="flex items-center gap-4 mb-10">
@@ -57,7 +60,7 @@ function renderProtokollTab(container) {
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1.5">Reinigungskraft</label>
-          <input id="cleaner" value="Maria Schmidt" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white text-base focus:outline-none focus:border-[#FF385C]">
+          <input id="cleaner" value="${savedCleaner}" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white text-base focus:outline-none focus:border-[#FF385C]">
         </div>
       </div>
 
@@ -148,7 +151,8 @@ function renderProtokollTab(container) {
   `;
 
   const select = document.getElementById('property-select');
-  Storage.get('superclean_properties', ['Musterstraße 12, 10115 Berlin']).forEach(p => {
+  const savedProperties = Storage.get('superclean_properties', [savedProperty]);
+  savedProperties.forEach(p => {
     const opt = document.createElement('option');
     opt.value = p; opt.textContent = p;
     select.appendChild(opt);
@@ -559,12 +563,6 @@ function deleteProtocol(id, modal) {
   window.showToast('Protokoll gelöscht');
 }
 
-// Expose all functions to global scope
-window.showProtocolModal = showProtocolModal;
-window.downloadProtocolPDF = downloadProtocolPDF;
-window.deleteProtocol = deleteProtocol;
-window.clearAllHistory = clearAllHistory;
-
 function saveProtocol() {
   const data = {
     id: Date.now(),
@@ -605,6 +603,91 @@ function saveProtocol() {
     renderProtokollTab(content);
   }, 500);
 }
+
+function renderSettingsTab(container) {
+  const savedCleaner = Storage.get('superclean_cleaner_name', 'Maria Schmidt');
+  const savedProperty = Storage.get('superclean_property_address', 'Musterstraße 12, 10115 Berlin');
+  
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-14 h-14 bg-[#FF385C] rounded-2xl flex items-center justify-center shadow-lg">
+          <i class="fa-solid fa-cog text-white text-3xl"></i>
+        </div>
+        <div>
+          <h1 class="text-5xl font-semibold tracking-tight text-slate-900">Einstellungen</h1>
+          <p class="text-xl text-slate-700 mt-1">Verwalten Sie Ihre Standardwerte</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 mb-6 shadow-sm">
+        <h2 class="text-2xl font-semibold text-slate-900 mb-6">Reinigungskraft</h2>
+        
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-slate-700 mb-2">Name der Reinigungskraft</label>
+          <input id="cleaner-name" type="text" value="${savedCleaner}" 
+                 class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white text-base focus:outline-none focus:border-[#FF385C]">
+          <p class="text-xs text-slate-500 mt-1">Dieser Name wird automatisch in neuen Protokollen verwendet.</p>
+        </div>
+        
+        <button onclick="saveCleanerName()" class="px-6 py-3 bg-[#FF385C] text-white rounded-xl font-semibold hover:bg-[#E31C5F] transition-colors">
+          Name speichern
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+        <h2 class="text-2xl font-semibold text-slate-900 mb-6">Standard Wohnung</h2>
+        
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-slate-700 mb-2">Adresse</label>
+          <input id="property-address" type="text" value="${savedProperty}" 
+                 class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white text-base focus:outline-none focus:border-[#FF385C]">
+          <p class="text-xs text-slate-500 mt-1">Diese Adresse wird als Standard in neuen Protokollen verwendet.</p>
+        </div>
+        
+        <button onclick="savePropertyAddress()" class="px-6 py-3 bg-[#FF385C] text-white rounded-xl font-semibold hover:bg-[#E31C5F] transition-colors">
+          Adresse speichern
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+window.saveCleanerName = function() {
+  const input = document.getElementById('cleaner-name');
+  if (!input) return;
+  
+  const name = input.value.trim();
+  if (!name) {
+    window.showToast('Bitte geben Sie einen Namen ein', 'error');
+    return;
+  }
+  
+  Storage.set('superclean_cleaner_name', name);
+  window.showToast('Name erfolgreich gespeichert!');
+};
+
+window.savePropertyAddress = function() {
+  const input = document.getElementById('property-address');
+  if (!input) return;
+  
+  const address = input.value.trim();
+  if (!address) {
+    window.showToast('Bitte geben Sie eine Adresse ein', 'error');
+    return;
+  }
+  
+  Storage.set('superclean_property_address', address);
+  
+  // Also add to properties list if not exists
+  let properties = Storage.get('superclean_properties', []);
+  if (!properties.includes(address)) {
+    properties.push(address);
+    Storage.set('superclean_properties', properties);
+  }
+  
+  window.showToast('Adresse erfolgreich gespeichert!');
+};
 
 window.generatePDF = function() {
   const { jsPDF } = window.jspdf;
