@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperClean • Airbnb Protokoll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+        body { font-family: 'Inter', system_ui, sans-serif; }
+        .clean-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .task-row:hover { background-color: #f8fafc; }
+        .section-header { background: linear-gradient(to right, #10b981, #059669); }
+        .protokoll-print { max-width: 800px; margin: 0 auto; }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <!-- Navbar -->
+    <nav class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-x-3">
+                    <div class="w-10 h-10 bg-emerald-600 rounded-2xl flex items-center justify-center">
+                        <i class="fa-solid fa-broom text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-2xl text-slate-900">SuperClean</span>
+                        <span class="text-emerald-600 text-sm font-medium">Pro</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-x-2">
+                    <div onclick="showTab('protokoll')" class="tab-btn px-4 py-2 rounded-2xl flex items-center gap-x-2 cursor-pointer hover:bg-slate-100 active-tab" id="tab-protokoll">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span class="font-medium">Neues Protokoll</span>
+                    </div>
+                    <div onclick="showTab('historie')" class="tab-btn px-4 py-2 rounded-2xl flex items-center gap-x-2 cursor-pointer hover:bg-slate-100" id="tab-historie">
+                        <i class="fa-solid fa-history"></i>
+                        <span class="font-medium">Historie</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- PROTOKOLL TAB -->
+        <div id="protokoll-tab">
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-slate-900">Reinigungsprotokoll</h1>
+                <p class="text-slate-600 mt-1">Für Airbnb &amp; Ferienwohnungen</p>
+            </div>
+
+            <!-- Property & Cleaner Info -->
+            <div class="bg-white rounded-3xl shadow-sm border p-8 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Objekt / Adresse</label>
+                        <input id="property" type="text" placeholder="z.B. Musterstraße 12, 10115 Berlin" 
+                               class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Reinigungskraft</label>
+                        <input id="cleaner" type="text" placeholder="Dein Name" value="Maria Schmidt"
+                               class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Datum</label>
+                        <input id="date" type="date" value="2026-05-19" 
+                               class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="space-y-6">
+                
+                <!-- Küche -->
+                <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                    <div class="section-header px-6 py-4 flex items-center gap-x-3">
+                        <i class="fa-solid fa-kitchen-set text-white text-xl"></i>
+                        <span class="font-semibold text-white text-lg">Küche</span>
+                    </div>
+                    <div class="p-6 space-y-3" id="kitchen-tasks">
+                        <!-- Tasks added by JS -->
+                    </div>
+                </div>
+
+                <!-- Wohnzimmer -->
+                <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                    <div class="section-header px-6 py-4 flex items-center gap-x-3">
+                        <i class="fa-solid fa-couch text-white text-xl"></i>
+                        <span class="font-semibold text-white text-lg">Wohnzimmer</span>
+                    </div>
+                    <div class="p-6 space-y-3" id="living-tasks"></div>
+                </div>
+
+                <!-- Schlafzimmer -->
+                <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                    <div class="section-header px-6 py-4 flex items-center gap-x-3">
+                        <i class="fa-solid fa-bed text-white text-xl"></i>
+                        <span class="font-semibold text-white text-lg">Schlafzimmer</span>
+                    </div>
+                    <div class="p-6 space-y-3" id="bedroom-tasks"></div>
+                </div>
+
+                <!-- Badezimmer -->
+                <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                    <div class="section-header px-6 py-4 flex items-center gap-x-3">
+                        <i class="fa-solid fa-bath text-white text-xl"></i>
+                        <span class="font-semibold text-white text-lg">Badezimmer</span>
+                    </div>
+                    <div class="p-6 space-y-3" id="bathroom-tasks"></div>
+                </div>
+
+                <!-- Flur & Eingang -->
+                <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                    <div class="section-header px-6 py-4 flex items-center gap-x-3">
+                        <i class="fa-solid fa-door-open text-white text-xl"></i>
+                        <span class="font-semibold text-white text-lg">Flur &amp; Eingang</span>
+                    </div>
+                    <div class="p-6 space-y-3" id="hallway-tasks"></div>
+                </div>
+
+            </div>
+
+            <!-- Probleme & Notizen -->
+            <div class="bg-white rounded-3xl shadow-sm border p-8 mt-8">
+                <h3 class="font-semibold text-xl mb-4 flex items-center gap-x-2">
+                    <i class="fa-solid fa-exclamation-triangle text-amber-500"></i>
+                    <span>Probleme / Schäden gefunden?</span>
+                </h3>
+                
+                <textarea id="issues" rows="4" placeholder="z.B. Waschmaschine macht Geräusche, Lampe defekt..." 
+                          class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:outline-none focus:border-emerald-500"></textarea>
+                
+                <div class="mt-4">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Fotos von Problemen (optional)</label>
+                    <input type="file" id="photos" multiple accept="image/*" class="hidden">
+                    <div onclick="document.getElementById('photos').click()" 
+                         class="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:border-emerald-400 transition-colors">
+                        <i class="fa-solid fa-camera text-3xl text-slate-400 mb-2"></i>
+                        <p class="text-slate-600">Fotos hier klicken oder ziehen</p>
+                        <p class="text-xs text-slate-500 mt-1">Max. 5 Fotos</p>
+                    </div>
+                    <div id="photo-preview" class="flex flex-wrap gap-3 mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Abschluss -->
+            <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                <button onclick="saveProtocol()" 
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white font-semibold py-4 rounded-3xl flex items-center justify-center gap-x-2 text-lg">
+                    <i class="fa-solid fa-save"></i>
+                    <span>Protokoll speichern</span>
+                </button>
+                
+                <button onclick="generatePDF()" 
+                        class="flex-1 border border-emerald-600 text-emerald-600 hover:bg-emerald-50 font-semibold py-4 rounded-3xl flex items-center justify-center gap-x-2 text-lg">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>PDF herunterladen</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- HISTORIE TAB -->
+        <div id="historie-tab" class="hidden">
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-slate-900">Protokoll-Historie</h1>
+                <p class="text-slate-600 mt-1">Alle gespeicherten Reinigungen</p>
+            </div>
+            
+            <div id="history-list" class="space-y-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-check text-emerald-600 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold">Protokoll gespeichert!</h3>
+                <p class="text-slate-600 mt-2">Das Protokoll wurde lokal auf diesem Gerät gespeichert.</p>
+                
+                <div class="mt-6 flex gap-3">
+                    <button onclick="closeModal()" class="flex-1 py-3 border rounded-2xl font-medium">Schließen</button>
+                    <button onclick="showTab('historie'); closeModal()" class="flex-1 py-3 bg-emerald-600 text-white rounded-2xl font-medium">Zur Historie</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#10b981');
+        }
+
+        // Task templates
+        const taskTemplates = {
+            kitchen: [
+                "Arbeitsplatten & Spüle gereinigt",
+                "Herd & Backofen geputzt (innen + außen)",
+                "Kühlschrank leer & gereinigt",
+                "Geschirrspüler leer & sauber",
+                "Müll rausgebracht & Mülleimer gereinigt",
+                "Mikrowelle innen & außen",
+                "Kaffeemaschine & Wasserkocher entkalkt",
+                "Boden gewischt & gesaugt"
+            ],
+            living: [
+                "Staub gewischt (Regale, TV, Bilderrahmen)",
+                "Sofa & Sessel abgesaugt",
+                "Boden gesaugt & gewischt",
+                "Fenster & Fensterbänke geputzt",
+                "Vorhänge & Jalousien abgestaubt",
+                "Kissen & Decken aufgeschüttelt",
+                "Lichtschalter & Steckdosen abgewischt"
+            ],
+            bedroom: [
+                "Bett neu bezogen (Bettwäsche + Kissenbezüge)",
+                "Matratze & Boxspring abgesaugt",
+                "Schränke & Kommoden abgestaubt",
+                "Boden gesaugt & gewischt",
+                "Spiegel & Bilderrahmen geputzt",
+                "Nachttische & Lampen abgewischt",
+                "Fenster geputzt"
+            ],
+            bathroom: [
+                "Dusche / Badewanne + Armaturen geputzt",
+                "Toilette innen & außen",
+                "Waschbecken & Spiegel gereinigt",
+                "Fliesen & Fugen geschrubbt",
+                "Boden gewischt",
+                "Handtücher & Seife erneuert",
+                "Mülleimer geleert & gereinigt",
+                "Lüftung & Abluft gereinigt"
+            ],
+            hallway: [
+                "Eingangstür & Klingel abgewischt",
+                "Schuhschrank & Garderobe abgestaubt",
+                "Boden gesaugt & gewischt",
+                "Lichtschalter abgewischt",
+                "Spiegel geputzt",
+                "Matten & Teppiche abgesaugt"
+            ]
+        };
+
+        let selectedPhotos = [];
+
+        function createTaskList(containerId, tasks) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                const div = document.createElement('div');
+                div.className = `task-row flex items-start gap-x-3 p-3 rounded-2xl`;
+                div.innerHTML = `
+                    <div class="pt-0.5">
+                        <input type="checkbox" id="${containerId}-${index}" class="w-5 h-5 accent-emerald-600 mt-0.5">
+                    </div>
+                    <div class="flex-1">
+                        <label for="${containerId}-${index}" class="text-slate-700 cursor-pointer select-none">${task}</label>
+                        <input type="text" placeholder="Notiz (optional)" 
+                               class="mt-1 w-full text-sm px-3 py-1 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-400 text-slate-600" 
+                               id="note-${containerId}-${index}">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function initChecklists() {
+            createTaskList('kitchen-tasks', taskTemplates.kitchen);
+            createTaskList('living-tasks', taskTemplates.living);
+            createTaskList('bedroom-tasks', taskTemplates.bedroom);
+            createTaskList('bathroom-tasks', taskTemplates.bathroom);
+            createTaskList('hallway-tasks', taskTemplates.hallway);
+        }
+
+        // Photo preview
+        function setupPhotoUpload() {
+            const input = document.getElementById('photos');
+            const preview = document.getElementById('photo-preview');
+            
+            input.addEventListener('change', function() {
+                preview.innerHTML = '';
+                selectedPhotos = Array.from(this.files).slice(0, 5);
+                
+                selectedPhotos.forEach((file, i) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'relative w-20 h-20';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" class="w-20 h-20 object-cover rounded-2xl border shadow-sm">
+                            <button onclick="removePhoto(${i})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        `;
+                        preview.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        function removePhoto(index) {
+            selectedPhotos.splice(index, 1);
+            const preview = document.getElementById('photo-preview');
+            preview.innerHTML = '';
+            
+            selectedPhotos.forEach((file, i) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative w-20 h-20';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="w-20 h-20 object-cover rounded-2xl border shadow-sm">
+                        <button onclick="removePhoto(${i})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    `;
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function getCheckedTasks(section) {
+            const container = document.getElementById(section + '-tasks');
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            const tasks = [];
+            
+            checkboxes.forEach((cb, i) => {
+                const noteInput = document.getElementById(`note-${section}-tasks-${i}`);
+                tasks.push({
+                    text: taskTemplates[section][i],
+                    checked: cb.checked,
+                    note: noteInput ? noteInput.value.trim() : ''
+                });
+            });
+            return tasks;
+        }
+
+        function saveProtocol() {
+            const protocol = {
+                id: Date.now(),
+                property: document.getElementById('property').value || 'Unbekanntes Objekt',
+                cleaner: document.getElementById('cleaner').value || 'Unbekannt',
+                date: document.getElementById('date').value,
+                kitchen: getCheckedTasks('kitchen'),
+                living: getCheckedTasks('living'),
+                bedroom: getCheckedTasks('bedroom'),
+                bathroom: getCheckedTasks('bathroom'),
+                hallway: getCheckedTasks('hallway'),
+                issues: document.getElementById('issues').value.trim(),
+                photos: selectedPhotos.length, // only count for now
+                timestamp: new Date().toISOString()
+            };
+
+            let protocols = JSON.parse(localStorage.getItem('superclean_protocols') || '[]');
+            protocols.unshift(protocol);
+            localStorage.setItem('superclean_protocols', JSON.stringify(protocols));
+
+            // Show success
+            document.getElementById('success-modal').classList.remove('hidden');
+            document.getElementById('success-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+            document.getElementById('success-modal').classList.remove('flex');
+            // Reset form for new protocol
+            resetForm();
+        }
+
+        function resetForm() {
+            document.getElementById('property').value = '';
+            document.getElementById('issues').value = '';
+            document.getElementById('photo-preview').innerHTML = '';
+            selectedPhotos = [];
+            
+            // Uncheck all
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('input[placeholder="Notiz (optional)"]').forEach(input => input.value = '');
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const property = document.getElementById('property').value || 'Unbekanntes Objekt';
+            const cleaner = document.getElementById('cleaner').value || 'Unbekannt';
+            const date = document.getElementById('date').value;
+
+            // Header
+            doc.setFontSize(22);
+            doc.setTextColor(16, 185, 129);
+            doc.text('SuperClean Protokoll', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setTextColor(51, 65, 85);
+            doc.text(`Objekt: ${property}`, 20, 35);
+            doc.text(`Reinigungskraft: ${cleaner}`, 20, 42);
+            doc.text(`Datum: ${date}`, 20, 49);
+
+            let y = 60;
+            const sections = ['kitchen', 'living', 'bedroom', 'bathroom', 'hallway'];
+            const sectionNames = {
+                kitchen: 'Küche',
+                living: 'Wohnzimmer',
+                bedroom: 'Schlafzimmer',
+                bathroom: 'Badezimmer',
+                hallway: 'Flur & Eingang'
+            };
+
+            sections.forEach(section => {
+                const tasks = getCheckedTasks(section);
+                const done = tasks.filter(t => t.checked).length;
+                
+                doc.setFontSize(13);
+                doc.setTextColor(16, 185, 129);
+                doc.text(`${sectionNames[section]} (${done}/${tasks.length} erledigt)`, 20, y);
+                y += 8;
+
+                doc.setFontSize(10);
+                doc.setTextColor(51, 65, 85);
+                tasks.forEach(task => {
+                    const status = task.checked ? '✓' : '☐';
+                    let line = `${status} ${task.text}`;
+                    if (task.note) line += ` – ${task.note}`;
+                    
+                    if (y > 270) { doc.addPage(); y = 20; }
+                    doc.text(line, 25, y);
+                    y += 6;
+                });
+                y += 6;
+            });
+
+            // Issues
+            const issues = document.getElementById('issues').value.trim();
+            if (issues) {
+                if (y > 250) { doc.addPage(); y = 20; }
+                doc.setFontSize(13);
+                doc.setTextColor(245, 158, 11);
+                doc.text('Probleme / Schäden:', 20, y);
+                y += 8;
+                doc.setFontSize(10);
+                doc.setTextColor(51, 65, 85);
+                const lines = doc.splitTextToSize(issues, 170);
+                doc.text(lines, 25, y);
+            }
+
+            // Footer
+            doc.setFontSize(9);
+            doc.setTextColor(148, 163, 184);
+            doc.text('Erstellt mit SuperClean • ' + new Date().toLocaleDateString('de-DE'), 105, 285, { align: 'center' });
+
+            doc.save(`Protokoll_${property.replace(/\s+/g, '_')}_${date}.pdf`);
+        }
+
+        function showTab(tab) {
+            // Hide all
+            document.getElementById('protokoll-tab').classList.add('hidden');
+            document.getElementById('historie-tab').classList.add('hidden');
+            
+            // Show selected
+            document.getElementById(tab + '-tab').classList.remove('hidden');
+            
+            // Update active tab style
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active-tab', 'bg-emerald-100', 'text-emerald-700'));
+            document.getElementById('tab-' + tab).classList.add('active-tab', 'bg-emerald-100', 'text-emerald-700');
+            
+            if (tab === 'historie') {
+                loadHistory();
+            }
+        }
+
+        function loadHistory() {
+            const container = document.getElementById('history-list');
+            container.innerHTML = '';
+            
+            let protocols = JSON.parse(localStorage.getItem('superclean_protocols') || '[]');
+            
+            if (protocols.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-12 text-center border">
+                        <i class="fa-solid fa-inbox text-5xl text-slate-300 mb-4"></i>
+                        <p class="text-slate-500">Noch keine Protokolle gespeichert.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            protocols.forEach((p, index) => {
+                const totalTasks = Object.keys(taskTemplates).reduce((sum, key) => sum + taskTemplates[key].length, 0);
+                let done = 0;
+                ['kitchen','living','bedroom','bathroom','hallway'].forEach(s => {
+                    done += p[s] ? p[s].filter(t => t.checked).length : 0;
+                });
+
+                const div = document.createElement('div');
+                div.className = 'bg-white border rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-shadow cursor-pointer';
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center gap-x-3">
+                            <div class="font-semibold text-lg">${p.property}</div>
+                            <div class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">${p.date}</div>
+                        </div>
+                        <div class="text-sm text-slate-600 mt-1">${p.cleaner} • ${done} von ${totalTasks} Aufgaben erledigt</div>
+                    </div>
+                    <div class="flex items-center gap-x-2">
+                        <button onclick="event.stopImmediatePropagation(); viewProtocol(${p.id})" 
+                                class="px-5 py-2 text-sm bg-white border border-emerald-600 text-emerald-600 rounded-2xl hover:bg-emerald-50 flex items-center gap-x-2">
+                            <i class="fa-solid fa-eye"></i> <span>Ansehen</span>
+                        </button>
+                        <button onclick="event.stopImmediatePropagation(); deleteProtocol(${p.id}, this)" 
+                                class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-2xl flex items-center gap-x-2">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                div.onclick = () => viewProtocol(p.id);
+                container.appendChild(div);
+            });
+        }
+
+        function viewProtocol(id) {
+            let protocols = JSON.parse(localStorage.getItem('superclean_protocols') || '[]');
+            const protocol = protocols.find(p => p.id === id);
+            if (!protocol) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4';
+            
+            let html = `<div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-auto">
+                <div class="p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 class="text-3xl font-bold">${protocol.property}</h2>
+                            <p class="text-slate-600">${protocol.cleaner} • ${protocol.date}</p>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-3xl text-slate-400 hover:text-slate-600">&times;</button>
+                    </div>
+            `;
+
+            const sections = ['kitchen', 'living', 'bedroom', 'bathroom', 'hallway'];
+            const names = {kitchen: 'Küche', living: 'Wohnzimmer', bedroom: 'Schlafzimmer', bathroom: 'Badezimmer', hallway: 'Flur & Eingang'};
+
+            sections.forEach(s => {
+                if (!protocol[s]) return;
+                const done = protocol[s].filter(t => t.checked).length;
+                html += `<div class="mb-6">
+                    <div class="font-semibold text-emerald-700 mb-2 flex items-center gap-x-2">
+                        <span>${names[s]}</span> <span class="text-xs bg-emerald-100 px-2 py-0.5 rounded">${done}/${protocol[s].length}</span>
+                    </div>`;
+                
+                protocol[s].forEach(task => {
+                    const icon = task.checked ? '<i class="fa-solid fa-check text-emerald-600"></i>' : '<i class="fa-regular fa-square text-slate-400"></i>';
+                    html += `<div class="flex gap-x-3 py-1 text-sm ${task.checked ? '' : 'text-slate-400'}">
+                        <div class="w-5">${icon}</div>
+                        <div>${task.text} ${task.note ? `<span class="text-emerald-600 text-xs">(${task.note})</span>` : ''}</div>
+                    </div>`;
+                });
+                html += `</div>`;
+            });
+
+            if (protocol.issues) {
+                html += `<div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mt-4">
+                    <div class="font-semibold text-amber-700 mb-2 flex items-center gap-x-2"><i class="fa-solid fa-exclamation-triangle"></i> Probleme</div>
+                    <p class="text-sm">${protocol.issues}</p>
+                </div>`;
+            }
+
+            html += `</div>
+                <div class="border-t p-6 flex justify-end gap-3 bg-slate-50 rounded-b-3xl">
+                    <button onclick="this.closest('.fixed').remove()" class="px-6 py-3 border rounded-2xl">Schließen</button>
+                    <button onclick="printProtocol(${id}); this.closest('.fixed').remove()" class="px-6 py-3 bg-emerald-600 text-white rounded-2xl flex items-center gap-x-2">
+                        <i class="fa-solid fa-print"></i> <span>Drucken / PDF</span>
+                    </button>
+                </div>
+            </div>`;
+
+            modal.innerHTML = html;
+            document.body.appendChild(modal);
+        }
+
+        function printProtocol(id) {
+            let protocols = JSON.parse(localStorage.getItem('superclean_protocols') || '[]');
+            const p = protocols.find(x => x.id === id);
+            if (!p) return;
+
+            // Reuse generatePDF logic but with saved data - simplified for demo
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.setTextColor(16, 185, 129);
+            doc.text('SuperClean Protokoll', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(11);
+            doc.setTextColor(51, 65, 85);
+            doc.text(`Objekt: ${p.property}`, 20, 32);
+            doc.text(`Reinigungskraft: ${p.cleaner}`, 20, 39);
+            doc.text(`Datum: ${p.date}`, 20, 46);
+
+            let y = 58;
+            // ... (similar to generatePDF but with p data)
+            // For simplicity, just show message
+            alert('PDF wird heruntergeladen (Demo). In echter Version würde hier das gespeicherte Protokoll als PDF generiert.');
+            // You can expand this later
+        }
+
+        function deleteProtocol(id, element) {
+            if (!confirm('Protokoll wirklich löschen?')) return;
+            
+            let protocols = JSON.parse(localStorage.getItem('superclean_protocols') || '[]');
+            protocols = protocols.filter(p => p.id !== id);
+            localStorage.setItem('superclean_protocols', JSON.stringify(protocols));
+            
+            element.closest('div[onclick]').remove();
+        }
+
+        function init() {
+            initTailwind();
+            initChecklists();
+            setupPhotoUpload();
+            
+            // Set today's date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            
+            // Default property example
+            document.getElementById('property').value = 'Musterstraße 12, 10115 Berlin';
+            
+            // Show protokoll tab by default
+            document.getElementById('protokoll-tab').classList.remove('hidden');
+            document.getElementById('tab-protokoll').classList.add('active-tab', 'bg-emerald-100', 'text-emerald-700');
+            
+            // Keyboard shortcut
+            document.addEventListener('keydown', function(e) {
+                if (e.metaKey && e.key === 's') {
+                    e.preventDefault();
+                    saveProtocol();
+                }
+            });
+
+            // Load some demo data on first visit
+            if (!localStorage.getItem('superclean_protocols')) {
+                // Optional: add demo protocol
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
