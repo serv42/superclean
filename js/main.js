@@ -696,47 +696,6 @@ window.downloadProtocolPDF = downloadProtocolPDF;
 window.deleteProtocol = deleteProtocol;
 window.clearAllHistory = clearAllHistory;
 
-function saveProtocol() {
-  const data = {
-    id: Date.now(),
-    property: document.getElementById('property-select').value,
-    cleaner: document.getElementById('cleaner').value,
-    date: document.getElementById('date').value,
-    rooms: {},
-    completedTasks: 0,
-    language: 'de'
-  };
-  
-  let totalCompleted = 0;
-  
-  Object.keys(roomsData.de).forEach(key => {
-    const savedState = Storage.get(`room_${key}_state`, { checked: [], notes: {} });
-    data.rooms[key] = {
-      checked: savedState.checked || [],
-      notes: savedState.notes || {}
-    };
-    totalCompleted += (savedState.checked || []).length;
-  });
-  
-  data.completedTasks = totalCompleted;
-  
-  let protocols = Storage.get('superclean_protocols', []);
-  protocols.unshift(data);
-  Storage.set('superclean_protocols', protocols);
-  
-  window.showToast('Protokoll erfolgreich gespeichert!');
-  
-  Object.keys(roomsData.de).forEach(key => {
-    Storage.set(`room_${key}_state`, { checked: [], notes: {} });
-  });
-  
-  setTimeout(() => {
-    const content = document.getElementById('main-content');
-    content.innerHTML = '';
-    renderProtokollTab(content);
-  }, 500);
-}
-
 window.generatePDF = function() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
