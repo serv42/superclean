@@ -1,7 +1,7 @@
 import { Storage } from './utils/storage.js';
 import { createRoomSection, getRoomData } from './components/room-checklist.js';
 import { initSignaturePad, clearSignature, saveSignature, getSignature } from './components/signature.js';
-import { renderHistory, showProtocolModal } from './components/history.js';
+import { renderHistory } from './components/history.js';
 import { renderAdminSettings } from './components/settings.js';
 import { roomsData } from './data/rooms.js';
 
