@@ -185,7 +185,6 @@ function renderProtokollTab(container) {
     suppliesContainer.appendChild(div);
   });
 
-  // Attach save protocol button
   const saveBtn = document.getElementById('save-protocol-btn');
   if (saveBtn) {
     saveBtn.addEventListener('click', saveProtocol);
@@ -394,8 +393,10 @@ function renderHistoryTab(container) {
           <h3 class="text-2xl font-semibold text-slate-700 mb-2">Noch keine Protokolle</h3>
           <p class="text-slate-500">Erstelle dein erstes Protokoll im "Protokoll" Tab</p>
         </div>
-      ` : protocols.map((p, index) => `
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer" onclick="showProtocolModal(${index})">
+      ` : protocols.map((p, index) => {
+        const div = document.createElement('div');
+        div.className = 'bg-white border border-slate-200 rounded-2xl p-6 mb-4 hover:border-[#FF385C] transition-all cursor-pointer';
+        div.innerHTML = `
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="text-2xl font-semibold text-slate-900">${p.property}</h3>
@@ -412,9 +413,29 @@ function renderHistoryTab(container) {
             <span>${new Date(p.id).toLocaleDateString('de-DE')}</span>
           </div>
         </div>
-      `).join('')}
+        `;
+        
+        div.addEventListener('click', () => showProtocolModal(index));
+        return div;
+      }).join('')}
     </div>
   `;
+  
+  // Append elements properly
+  const historyContainer = document.createElement('div');
+  historyContainer.innerHTML = container.innerHTML;
+  container.innerHTML = '';
+  
+  const items = historyContainer.children;
+  for (let i = 0; i < items.length; i++) {
+    container.appendChild(items[i].cloneNode(true));
+  }
+  
+  // Re-attach click events
+  const allItems = container.querySelectorAll('.bg-white.border');
+  allItems.forEach((item, index) => {
+    item.addEventListener('click', () => showProtocolModal(index));
+  });
 }
 
 function showProtocolModal(index) {
