@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:8.2-apache
+    container_name: superclean-api
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api:/var/www/html
+      - ./config:/var/www/html/config
+    environment:
+      - PHP_INI_DIR=/usr/local/etc/php
+    restart: unless-stopped
+
+  # Optional: MySQL für spätere Nutzung
+  # db:
+  #   image: mysql:8.0
+  #   container_name: superclean-db
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_DATABASE: superclean
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - db_data:/var/lib/mysql
+
+# volumes:
+#   db_data:
